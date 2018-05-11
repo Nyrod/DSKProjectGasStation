@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <objectModel xsi:schemaLocation="http://standards.ieee.org/IEEE1516-2010 http://standards.ieee.org/downloads/1516/1516.2-2010/IEEE1516-DIF-2010.xsd" xmlns="http://standards.ieee.org/IEEE1516-2010" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelIdentification>
+        <name>Distributor FOM</name>
+        <type>FOM</type>
     </modelIdentification>
+    <objects>
+        <objectClass>
+            <name>HLAobjectRoot</name>
+            <objectClass>
+                <name>Distributor</name>
+                <attribute>
+                    <name>DistributorID</name>
+                    <dataType>HLAinteger</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
+                </attribute>
+                <attribute>
+                    <name>DistributorType</name>
+                    <dataType>HLAstring</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
+                </attribute>
+                <attribute>
+                    <name>QueueSize</name>
+                    <dataType>HLAinteger</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
+                </attribute>
+            </objectClass>
+        </objectClass>
+    </objects>
+    <interactions>
+        <interactionClass>
+            <name>HLAinteractionRoot</name>
+            <interactionClass>
+                <name>DistributorServiceStart</name>
+                <transportation>HLAreliable</transportation>
+                <order>TimeStamp</order>
+                <parameter>
+                    <name>DistributorID</name>
+                    <dataType>HLAinteger</dataType>
+                </parameter>
+                <parameter>
+                    <name>CarID</name>
+                    <dataType>HLAinteger</dataType>
+                </parameter>
+            </interactionClass>
+            <interactionClass>
+                <name>DistributorServiceFinish</name>
+                <transportation>HLAreliable</transportation>
+                <order>TimeStamp</order>
+                <parameter>
+                    <name>DistributorID</name>
+                    <dataType>HLAinteger</dataType>
+                </parameter>
+                <parameter>
+                    <name>CarID</name>
+                    <dataType>HLAinteger</dataType>
+                </parameter>
+            </interactionClass>
+        </interactionClass>
+    </interactions>
 </objectModel>
