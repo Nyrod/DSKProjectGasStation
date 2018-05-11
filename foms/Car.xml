@@ -13,14 +13,20 @@
                 <attribute>
                     <name>CarID</name>
                     <dataType>HLAinteger</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
                 </attribute>
                 <attribute>
                     <name>WantWash</name>
                     <dataType>HLAboolean</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
                 </attribute>
                 <attribute>
                     <name>PayForWash</name>
                     <dataType>HLAboolean</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
                 </attribute>
             </objectClass>
         </objectClass>
@@ -30,6 +36,8 @@
             <name>HLAinteractionRoot</name>
             <interactionClass>
                 <name>ChooseDistributor</name>
+                <transportation>HLAreliable</transportation>
+                <order>TimeStamp</order>
                 <parameter>
                     <name>DistributorID</name>
                     <dataType>HLAinteger</dataType>
@@ -41,6 +49,8 @@
             </interactionClass>
             <interactionClass>
                 <name>WantToPay</name>
+                <transportation>HLAreliable</transportation>
+                <order>TimeStamp</order>
                 <parameter>
                     <name>CarID</name>
                     <dataType>HLAinteger</dataType>

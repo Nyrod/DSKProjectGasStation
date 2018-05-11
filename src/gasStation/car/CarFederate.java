@@ -72,7 +72,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
+        for (int i = Car.CARS_IN_SIMULATION -1; i >= 0; i--) {
             rtiamb.deleteObjectInstance(carObjectList.remove(i), generateTag());
         }
     }
