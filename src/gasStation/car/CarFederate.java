@@ -27,6 +27,11 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
+    protected void mainSimulationLoop() {
+
+    }
+
+    @Override
     protected URL[] modulesToJoin() throws MalformedURLException {
         return new URL[]{
                 (new File("foms/Car.xml")).toURI().toURL()
@@ -54,7 +59,6 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
         rtiamb.publishInteractionClass(chooseDistributor);
         rtiamb.publishInteractionClass(wantToPay);
-
     }
 
     @Override
@@ -74,8 +78,9 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
-    protected void mainSimulationLoop() {
-
+    protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
+        enableTimeRegulation();
+        enableTimeConstrained();
     }
 
     @Override
