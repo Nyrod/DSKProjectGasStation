@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
-    protected ArrayList<ObjectInstanceHandle> carObjectList;
+    protected ArrayList<Car> carList;
 
     protected ObjectClassHandle carHandle;
     protected AttributeHandle carID;
@@ -63,17 +63,19 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        carObjectList = new ArrayList<>();
+        carList = new ArrayList<>();
         for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
-            carObjectList.add(rtiamb.registerObjectInstance(carHandle));
-            log("Registered Object, handle=" + carObjectList.get(i));
+            Car carToAdd = new Car();
+            carToAdd.setObjectHandle(rtiamb.registerObjectInstance(carHandle));
+            carList.add(carToAdd);
+            log("Registered Object, handle=" + carToAdd.getObjectHandle());
         }
     }
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
         for (int i = Car.CARS_IN_SIMULATION -1; i >= 0; i--) {
-            rtiamb.deleteObjectInstance(carObjectList.remove(i), generateTag());
+            rtiamb.deleteObjectInstance(carList.remove(i).getObjectHandle(), generateTag());
         }
     }
 

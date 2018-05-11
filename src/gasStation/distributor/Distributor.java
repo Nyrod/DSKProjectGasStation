@@ -1,10 +1,10 @@
-package gasStation.car;
+package gasStation.distributor;
 
 import hla.rti1516e.ObjectInstanceHandle;
 
-public class Car {
+public class Distributor {
 
-    public static int CARS_IN_SIMULATION;
+    public static int DISTRIBUTORS_IN_SIMULATION = 5;
 
     private ObjectInstanceHandle objectHandle;
 
