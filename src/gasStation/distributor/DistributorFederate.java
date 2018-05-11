@@ -19,7 +19,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
-
+        System.out.println();
     }
 
     @Override
