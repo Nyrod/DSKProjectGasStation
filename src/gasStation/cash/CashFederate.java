@@ -21,6 +21,10 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     protected AttributeHandle queueSize;
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle cashServiceFinish;
+    protected ObjectClassHandle carClassHandle;
+    protected AttributeHandle carId;
+    protected AttributeHandle wantWash;
+    protected AttributeHandle payForWash;
 
     @Override
     protected CashFederateAmbassador createFederateAmbassador() {
@@ -42,13 +46,20 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
         // OBJECTS //
+        AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
+
         cashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Cash");
         queueSize = rtiamb.getAttributeHandle(cashClassHandle, "QueueLength");
-
-        AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
         attributes.add(queueSize);
 
         rtiamb.publishObjectClassAttributes(cashClassHandle, attributes);
+        attributes.clear();
+
+        carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
+        carId = rtiamb.getAttributeHandle(carClassHandle, "CarID");
+        wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
+        payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
+        rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
 
         // INTERACTIONS //
         cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");

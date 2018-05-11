@@ -1,38 +1,46 @@
-package gasStation.car;
+package gasStation.statistics;
 
 import gasStation.DefaultFederate;
-import hla.rti1516e.*;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.*;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 
-public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
+/**
+ * Created by Michał on 2018-05-11.
+ */
+public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbassador> {
 
-    protected ArrayList<Car> carList;
-
-    protected ObjectClassHandle carHandle;
-    protected AttributeHandle carID;
-    protected AttributeHandle wantWash;
-    protected AttributeHandle payForWash;
-    protected InteractionClassHandle chooseDistributor;
-    protected InteractionClassHandle wantToPay;
-
+    protected Statistics statistics;
+    protected ObjectClassHandle statisticsClassHandle;
+    // obiekt dystrybutor
     protected ObjectClassHandle distributorHandle;
     protected AttributeHandle distributorID;
     protected AttributeHandle distributorType;
-    protected AttributeHandle queueSize;
+    protected AttributeHandle distributorQueueSize;
+    // obiekt kasa
+    protected ObjectClassHandle cashHandle;
+    protected AttributeHandle cashQueueSize;
+    // obiekt myjnia
+    protected ObjectClassHandle carWashHandle;
+    protected AttributeHandle carhWashQueueSize;
+    protected AttributeHandle isFree;
+    // interakcje
     protected InteractionClassHandle distributorServiceStart;
     protected InteractionClassHandle distributorServiceFinish;
     protected InteractionClassHandle cashServiceStart;
-    protected InteractionClassHandle cashServiceFinish;
+    protected InteractionClassHandle chooseDistributor;
+    protected InteractionClassHandle wantToPay;
 
 
     @Override
-    protected CarFederateAmbassador createFederateAmbassador() {
-        return new CarFederateAmbassador(this);
+    protected StatisticsFederateAmbassador createFederateAmbassador() {
+        return new StatisticsFederateAmbassador(this);
     }
 
     @Override
@@ -42,89 +50,64 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected URL[] modulesToJoin() throws MalformedURLException {
-        return new URL[]{
-                (new File("foms/Car.xml")).toURI().toURL()
-        };
+        return new URL[] {new File("foms/Statiscits.xml").toURI().toURL()};
     }
 
     @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM {
-        // OBJECTS //
-        carHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
-        carID = rtiamb.getAttributeHandle(carHandle, "CarID");
-        wantWash = rtiamb.getAttributeHandle(carHandle, "WantWash");
-        payForWash = rtiamb.getAttributeHandle(carHandle, "PayForWash");
-
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
-        attributes.add(carID);
-        attributes.add(wantWash);
-        attributes.add(payForWash);
-        rtiamb.publishObjectClassAttributes(carHandle, attributes);
 
         distributorHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Distributor");
         distributorID = rtiamb.getAttributeHandle(distributorHandle, "DistributorID");
         distributorType = rtiamb.getAttributeHandle(distributorHandle, "DistributorType");
-        queueSize = rtiamb.getAttributeHandle(distributorHandle, "QueueSize");
-
-        attributes.clear();
+        distributorQueueSize = rtiamb.getAttributeHandle(distributorHandle, "QueueSize");
         attributes.add(distributorID);
         attributes.add(distributorType);
-        attributes.add(queueSize);
-
+        attributes.add(distributorQueueSize);
         rtiamb.subscribeObjectClassAttributes(distributorHandle, attributes);
 
-        // INTERACTIONS //
+        attributes.clear();
+        cashHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Cash");
+        cashQueueSize = rtiamb.getAttributeHandle(cashHandle, "QueueSize");
+        attributes.add(cashQueueSize);
+        rtiamb.subscribeObjectClassAttributes(cashHandle, attributes);
+
+        attributes.clear();
+        carWashHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.CarWash");
+        carhWashQueueSize = rtiamb.getAttributeHandle(carWashHandle, "QueueSize");
+        isFree = rtiamb.getAttributeHandle(carWashHandle, "IsFree");
+        attributes.add(carhWashQueueSize);
+        attributes.add(isFree);
+        rtiamb.subscribeObjectClassAttributes(cashHandle, attributes);
+
+        // INTERAKCJE
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
-        wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
         distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
         cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
-        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
+        wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
 
-        rtiamb.publishInteractionClass(chooseDistributor);
-        rtiamb.publishInteractionClass(wantToPay);
+        rtiamb.subscribeInteractionClass(chooseDistributor);
+        rtiamb.subscribeInteractionClass(wantToPay);
         rtiamb.subscribeInteractionClass(distributorServiceStart);
         rtiamb.subscribeInteractionClass(distributorServiceFinish);
         rtiamb.subscribeInteractionClass(cashServiceStart);
-        rtiamb.subscribeInteractionClass(cashServiceFinish);
     }
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        carList = new ArrayList<>();
-        for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
-            Car carToAdd = new Car();
-            carToAdd.setObjectHandle(rtiamb.registerObjectInstance(carHandle));
-            carList.add(carToAdd);
-            log("Registered Object, handle=" + carToAdd.getObjectHandle());
-        }
+        rtiamb.registerObjectInstance(statisticsClassHandle);
+        log("Registered Object, handle=" + statistics.statisticsInstanceHandle);
     }
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        for (int i = Car.CARS_IN_SIMULATION -1; i >= 0; i--) {
-            rtiamb.deleteObjectInstance(carList.remove(i).getObjectHandle(), generateTag());
-        }
+        rtiamb.deleteObjectInstance(statistics.statisticsInstanceHandle, generateTag());
     }
 
     @Override
     protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
-        enableTimeRegulation();
         enableTimeConstrained();
-    }
-
-    @Override
-    protected void log(String message) {
-        System.out.println("CarFederate   : " + message);
-    }
-
-
-    public static void main(String[] args) {
-        Car.CARS_IN_SIMULATION = 5;
-        try {
-            new CarFederate().runFederate("CarFederate", "CarFederateType");
-        } catch (Exception rtie) {
-            rtie.printStackTrace();
-        }
+        enableTimeRegulation();
     }
 }

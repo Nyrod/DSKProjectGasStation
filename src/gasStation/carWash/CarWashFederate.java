@@ -19,6 +19,10 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     protected ObjectClassHandle carWashClassHandle;
     protected AttributeHandle queueSize;
     protected AttributeHandle isFree;
+    protected ObjectClassHandle carClassHandle;
+    protected AttributeHandle carId;
+    protected AttributeHandle wantWash;
+    protected AttributeHandle payForWash;
 
     @Override
     protected CarWashFederateAmbassador createFederateAmbassador() {
@@ -49,6 +53,14 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         attributes.add(isFree);
 
         rtiamb.publishObjectClassAttributes(carWashClassHandle, attributes);
+
+        attributes.clear();
+
+        carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
+        carId = rtiamb.getAttributeHandle(carClassHandle, "CarID");
+        wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
+        payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
+        rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
     }
 
     @Override
