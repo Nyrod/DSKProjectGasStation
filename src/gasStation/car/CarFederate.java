@@ -20,6 +20,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected InteractionClassHandle chooseDistributor;
     protected InteractionClassHandle wantToPay;
 
+    protected ObjectClassHandle distributorHandle;
+    protected AttributeHandle distributorID;
+    protected AttributeHandle distributorType;
+    protected AttributeHandle queueSize;
+    protected InteractionClassHandle distributorServiceStart;
+    protected InteractionClassHandle distributorServiceFinish;
+    protected InteractionClassHandle cashServiceStart;
+    protected InteractionClassHandle cashServiceFinish;
+
 
     @Override
     protected CarFederateAmbassador createFederateAmbassador() {
@@ -39,7 +48,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
-    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
+    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM {
         // OBJECTS //
         carHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
         carID = rtiamb.getAttributeHandle(carHandle, "CarID");
@@ -51,14 +60,33 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         attributes.add(wantWash);
         attributes.add(payForWash);
 
+        distributorHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Distributor");
+        distributorID = rtiamb.getAttributeHandle(distributorHandle, "DistributorID");
+        distributorType = rtiamb.getAttributeHandle(distributorHandle, "DistributorType");
+        queueSize = rtiamb.getAttributeHandle(distributorHandle, "QueueSize");
+
+        attributes.clear();
+        attributes.add(distributorID);
+        attributes.add(distributorType);
+        attributes.add(queueSize);
+
         rtiamb.publishObjectClassAttributes(carHandle, attributes);
+        rtiamb.subscribeObjectClassAttributes(distributorHandle, attributes);
 
         // INTERACTIONS //
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
         wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
+        distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
+        distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
+        cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
+        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
 
         rtiamb.publishInteractionClass(chooseDistributor);
         rtiamb.publishInteractionClass(wantToPay);
+        rtiamb.subscribeInteractionClass(distributorServiceStart);
+        rtiamb.subscribeInteractionClass(distributorServiceFinish);
+        rtiamb.subscribeInteractionClass(cashServiceStart);
+        rtiamb.subscribeInteractionClass(cashServiceFinish);
     }
 
     @Override
