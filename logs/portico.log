@@ -1,0 +1,6 @@
+WARN  [main] portico.lrc: MOM support is currently unsupported in IEEE-1516e federations.
+WARN  [main] portico.lrc: MOM support is currently unsupported in IEEE-1516e federations.
+ERROR [main] portico.lrc: org.portico.lrc.compat.JErrorReadingFED: Element <attribute> missing child <order> element
+WARN  [main] portico.lrc: MOM support is currently unsupported in IEEE-1516e federations.
+ERROR [main] portico.lrc: org.portico.lrc.compat.JErrorReadingFED: Element <interactionClass> missing child <order> element
+WARN  [main] portico.lrc: MOM support is currently unsupported in IEEE-1516e federations.
