@@ -84,4 +84,12 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     protected void log(String message) {
         System.out.println("CarWashFederate   : " + message);
     }
+
+    public static void main(String[] args) {
+        try {
+            new CarWashFederate().runFederate("CarWashFederate", "CarWashFederateType");
+        } catch (Exception rtie) {
+            rtie.printStackTrace();
+        }
+    }
 }

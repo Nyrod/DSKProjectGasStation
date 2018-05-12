@@ -90,4 +90,12 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         enableTimeConstrained();
         enableTimeRegulation();
     }
+
+    public static void main(String[] args) {
+        try {
+            new DistributorFederate().runFederate("DistributorFederate", "DistributorFederateType");
+        } catch (Exception rtie) {
+            rtie.printStackTrace();
+        }
+    }
 }

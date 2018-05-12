@@ -90,4 +90,12 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     protected void log(String message) {
         System.out.println("CashFederate   : " + message);
     }
+
+    public static void main(String[] args) {
+        try {
+            new CashFederate().runFederate("CashFederate", "CashFederateType");
+        } catch (Exception rtie) {
+            rtie.printStackTrace();
+        }
+    }
 }

@@ -4,7 +4,7 @@ import hla.rti1516e.ObjectInstanceHandle;
 
 public class Car {
 
-    public static int CARS_IN_SIMULATION;
+    public static int CARS_IN_SIMULATION = 10;
 
     private ObjectInstanceHandle objectHandle;
 

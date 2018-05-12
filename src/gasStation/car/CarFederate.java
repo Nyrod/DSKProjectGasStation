@@ -120,7 +120,6 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
 
     public static void main(String[] args) {
-        Car.CARS_IN_SIMULATION = 5;
         try {
             new CarFederate().runFederate("CarFederate", "CarFederateType");
         } catch (Exception rtie) {

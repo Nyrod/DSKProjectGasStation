@@ -50,7 +50,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
     @Override
     protected URL[] modulesToJoin() throws MalformedURLException {
-        return new URL[] {new File("foms/Statiscits.xml").toURI().toURL()};
+        return new URL[] {new File("foms/Statistics.xml").toURI().toURL()};
     }
 
     @Override
@@ -109,5 +109,13 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
         enableTimeConstrained();
         enableTimeRegulation();
+    }
+
+    public static void main(String[] args) {
+        try {
+            new StatisticsFederate().runFederate("StatisticsFederate", "StatisticsFederateType");
+        } catch (Exception rtie) {
+            rtie.printStackTrace();
+        }
     }
 }

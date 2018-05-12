@@ -1,6 +1,7 @@
 package gasStation;
 
 import hla.rti1516e.*;
+import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.time.HLAfloat64Time;
 
 public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends NullFederateAmbassador {
@@ -66,6 +67,12 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
     public void timeAdvanceGrant(LogicalTime time) {
         this.federateTime = ((HLAfloat64Time) time).getValue();
         this.isAdvancing = false;
+    }
+
+
+    @Override
+    public void removeObjectInstance(ObjectInstanceHandle theObject, byte[] userSuppliedTag, OrderType sentOrdering, SupplementalRemoveInfo removeInfo) throws FederateInternalError {
+        log("Object Removed: handle=" + theObject);
     }
 
 }
