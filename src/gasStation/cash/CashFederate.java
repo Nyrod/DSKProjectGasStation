@@ -26,6 +26,10 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
 
+    public CashFederate() {
+        this.cash = new Cash();
+    }
+
     @Override
     protected CashFederateAmbassador createFederateAmbassador() {
         return new CashFederateAmbassador(this);
@@ -49,7 +53,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
 
         cashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Cash");
-        queueSize = rtiamb.getAttributeHandle(cashClassHandle, "QueueLength");
+        queueSize = rtiamb.getAttributeHandle(cashClassHandle, "QueueSize");
         attributes.add(queueSize);
 
         rtiamb.publishObjectClassAttributes(cashClassHandle, attributes);
@@ -71,7 +75,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        rtiamb.registerObjectInstance(cashClassHandle);
+        cash.cashInstanceHandle = rtiamb.registerObjectInstance(cashClassHandle);
         log("Registered Object, handle=" + cash.cashInstanceHandle);
     }
 

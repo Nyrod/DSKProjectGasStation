@@ -17,7 +17,6 @@ import java.net.URL;
 public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbassador> {
 
     protected Statistics statistics;
-    protected ObjectClassHandle statisticsClassHandle;
     // obiekt dystrybutor
     protected ObjectClassHandle distributorHandle;
     protected AttributeHandle distributorID;
@@ -37,6 +36,9 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     protected InteractionClassHandle chooseDistributor;
     protected InteractionClassHandle wantToPay;
 
+    public StatisticsFederate() {
+        this.statistics = new Statistics();
+    }
 
     @Override
     protected StatisticsFederateAmbassador createFederateAmbassador() {
@@ -78,7 +80,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         isFree = rtiamb.getAttributeHandle(carWashHandle, "IsFree");
         attributes.add(carhWashQueueSize);
         attributes.add(isFree);
-        rtiamb.subscribeObjectClassAttributes(cashHandle, attributes);
+        rtiamb.subscribeObjectClassAttributes(carWashHandle, attributes);
 
         // INTERAKCJE
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
@@ -96,13 +98,10 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        rtiamb.registerObjectInstance(statisticsClassHandle);
-        log("Registered Object, handle=" + statistics.statisticsInstanceHandle);
     }
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        rtiamb.deleteObjectInstance(statistics.statisticsInstanceHandle, generateTag());
     }
 
     @Override

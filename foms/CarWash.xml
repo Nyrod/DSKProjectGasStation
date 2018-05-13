@@ -6,19 +6,22 @@
     </modelIdentification>
     <objects>
         <objectClass>
-            <name>CarWash</name>
-            <attribute>
-                <name>QueueSize</name>
-                <dataType>HLAinteger</dataType>
-                <transportation>HLAreliable</transportation>
-                <order>TimeStamp</order>
-            </attribute>
-            <attribute>
-                <name>IsFree</name>
-                <dataType>HLAboolean</dataType>
-                <transportation>HLAreliable</transportation>
-                <order>TimeStamp</order>
-            </attribute>
+            <name>HLAobjectRoot</name>
+            <objectClass>
+                <name>CarWash</name>
+                <attribute>
+                    <name>QueueSize</name>
+                    <dataType>HLAinteger</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
+                </attribute>
+                <attribute>
+                    <name>IsFree</name>
+                    <dataType>HLAboolean</dataType>
+                    <transportation>HLAreliable</transportation>
+                    <order>TimeStamp</order>
+                </attribute>
+            </objectClass>
         </objectClass>
     </objects>
 </objectModel>

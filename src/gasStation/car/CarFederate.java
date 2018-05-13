@@ -3,6 +3,7 @@ package gasStation.car;
 import gasStation.DefaultFederate;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
+import hla.rti1516e.time.HLAfloat64Time;
 
 import java.io.File;
 import java.net.MalformedURLException;

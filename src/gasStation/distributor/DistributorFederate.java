@@ -1,11 +1,9 @@
 package gasStation.distributor;
 
 import gasStation.DefaultFederate;
-import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
+import hla.rti1516e.time.HLAfloat64Time;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -34,14 +32,15 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     }
 
     @Override
-    protected void mainSimulationLoop() {
-
+    protected void mainSimulationLoop() throws RTIexception {
+        sendInteractionDistributorServiceFinish(1,2);
+        sendInteractionDistributorServiceStart(2, 3);
     }
 
     @Override
     protected URL[] modulesToJoin() throws MalformedURLException {
-        return new URL[] {
-                new File("/foms/Distributor.xml").toURI().toURL()
+        return new URL[]{
+                new File("foms/Distributor.xml").toURI().toURL()
         };
     }
 
@@ -70,7 +69,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        for(int i = 0; i < Distributor.DISTRIBUTORS_IN_SIMULATION; i++) {
+        for (int i = 0; i < Distributor.DISTRIBUTORS_IN_SIMULATION; i++) {
             Distributor distributor = new Distributor();
             distributor.setObjectHandle(rtiamb.registerObjectInstance(distributorClassHandle));
             distributorList.add(distributor);
@@ -80,7 +79,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        for(int i = Distributor.DISTRIBUTORS_IN_SIMULATION - 1; i >= 0; i--) {
+        for (int i = Distributor.DISTRIBUTORS_IN_SIMULATION - 1; i >= 0; i--) {
             rtiamb.deleteObjectInstance(distributorList.remove(i).getObjectHandle(), generateTag());
         }
     }
@@ -89,6 +88,41 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
         enableTimeConstrained();
         enableTimeRegulation();
+    }
+
+    private void sendInteractionDistributorServiceStart(int distributorID, int carID) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "DistributorID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
+
+        parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + fedamb.federateLookahead);
+        rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), time);
+
+        log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + time.toString());
+    }
+
+    private void sendInteractionDistributorServiceFinish(int distributorID, int carID) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "DistributorID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
+
+        parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + fedamb.federateLookahead + fedamb.federateLookahead);
+        rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), time);
+
+        log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceStart}, time=" + time.toString());
+    }
+
+    @Override
+    protected void log(String message) {
+        System.out.println("DistributorFederate   : " + message);
     }
 
     public static void main(String[] args) {

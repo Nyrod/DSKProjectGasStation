@@ -8,8 +8,8 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
 
     protected Federate federate;
 
-    protected double federateTime = 0.0;
-    protected double federateLookahead = 1.0;
+    public double federateTime = 0.0;
+    public double federateLookahead = 1.0;
 
     protected boolean isRegulating = false;
     protected boolean isConstrained = false;
@@ -67,12 +67,27 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
     public void timeAdvanceGrant(LogicalTime time) {
         this.federateTime = ((HLAfloat64Time) time).getValue();
         this.isAdvancing = false;
+        log("Time Advance Granted: currentTime=" + time);
     }
-
 
     @Override
     public void removeObjectInstance(ObjectInstanceHandle theObject, byte[] userSuppliedTag, OrderType sentOrdering, SupplementalRemoveInfo removeInfo) throws FederateInternalError {
         log("Object Removed: handle=" + theObject);
+    }
+
+    protected void logReceiveInteraction(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
+        log.append(", tag=" + new String(userSuppliedTag));
+        log.append(", time=" + ((HLAfloat64Time) theTime).getValue());
+        log.append("\n");
+        for (ParameterHandle parameter : theParameters.keySet()) {
+            log.append("\tparamHandle=");
+            log.append(parameter);
+            log.append(", paramValue=");
+            log.append(theParameters.get(parameter).length);
+            log.append(" bytes");
+            log.append("\n");
+        }
+        log(log.toString());
     }
 
 }

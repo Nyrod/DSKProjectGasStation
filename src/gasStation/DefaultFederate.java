@@ -37,7 +37,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
     }
 
     protected abstract FederateAmbassador createFederateAmbassador();
-    protected abstract void mainSimulationLoop();
+    protected abstract void mainSimulationLoop() throws RTIexception;
     protected abstract URL[] modulesToJoin() throws MalformedURLException;
     protected abstract void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM;
     protected abstract void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected;
@@ -115,7 +115,6 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         // publish and subscribe //
         ///////////////////////////
         publishAndSubscribe();
-        log("Published and Subscribed");
 
         //////////////////////////////////
         // register an object to update //

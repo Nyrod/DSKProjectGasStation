@@ -9,21 +9,25 @@
             <name>HLAobjectRoot</name>
             <objectClass>
                 <name>Distributor</name>
+                <sharing>PublishSubscribe</sharing>
                 <attribute>
                     <name>DistributorID</name>
                     <dataType>HLAinteger</dataType>
+                    <sharing>PublishSubscribe</sharing>
                     <transportation>HLAreliable</transportation>
                     <order>TimeStamp</order>
                 </attribute>
                 <attribute>
                     <name>DistributorType</name>
                     <dataType>HLAstring</dataType>
+                    <sharing>PublishSubscribe</sharing>
                     <transportation>HLAreliable</transportation>
                     <order>TimeStamp</order>
                 </attribute>
                 <attribute>
                     <name>QueueSize</name>
                     <dataType>HLAinteger</dataType>
+                    <sharing>PublishSubscribe</sharing>
                     <transportation>HLAreliable</transportation>
                     <order>TimeStamp</order>
                 </attribute>
@@ -35,28 +39,32 @@
             <name>HLAinteractionRoot</name>
             <interactionClass>
                 <name>DistributorServiceStart</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
                 <parameter>
                     <name>DistributorID</name>
-                    <dataType>HLAinteger</dataType>
+                    <dataType>HLAinteger32BE</dataType>
                 </parameter>
                 <parameter>
                     <name>CarID</name>
-                    <dataType>HLAinteger</dataType>
+                    <dataType>HLAinteger32BE</dataType>
                 </parameter>
             </interactionClass>
             <interactionClass>
                 <name>DistributorServiceFinish</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
                 <parameter>
                     <name>DistributorID</name>
-                    <dataType>HLAinteger</dataType>
+                    <dataType>HLAinteger32BE</dataType>
                 </parameter>
                 <parameter>
                     <name>CarID</name>
-                    <dataType>HLAinteger</dataType>
+                    <dataType>HLAinteger32BE</dataType>
                 </parameter>
             </interactionClass>
         </interactionClass>

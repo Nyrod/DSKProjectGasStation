@@ -7,4 +7,9 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
     public DistributorFederateAmbassador(DistributorFederate federate) {
         super(federate);
     }
+
+    @Override
+    protected void log(String message) {
+        System.out.println("DistributorFederateAmbassador   : " + message);
+    }
 }

@@ -24,6 +24,10 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
 
+    public CarWashFederate() {
+        this.carWash = new CarWash();
+    }
+
     @Override
     protected CarWashFederateAmbassador createFederateAmbassador() {
         return new CarWashFederateAmbassador(this);
@@ -44,8 +48,8 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
         // OBJECTS //
-        carWashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
-        queueSize = rtiamb.getAttributeHandle(carWashClassHandle, "QueueLength");
+        carWashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.CarWash");
+        queueSize = rtiamb.getAttributeHandle(carWashClassHandle, "QueueSize");
         isFree = rtiamb.getAttributeHandle(carWashClassHandle, "IsFree");
 
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
@@ -65,7 +69,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
 
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        rtiamb.registerObjectInstance(carWashClassHandle);
+        carWash.carWashInstanceHandle = rtiamb.registerObjectInstance(carWashClassHandle);
         log("Registered Object, handle=" + carWash.carWashInstanceHandle);
     }
 
