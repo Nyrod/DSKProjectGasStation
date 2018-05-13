@@ -3,6 +3,7 @@ package gasStation.car;
 import gasStation.DefaultFederateAmbassador;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.RTIexception;
 
 public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate> {
 
@@ -78,6 +79,11 @@ public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate
     private void receiveDistributorServiceFinish(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
         log.append(" {DistributorServiceFinish}");
         logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        try {
+            federate.addUpdateCarAttributeInternalEvent();
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
     }
 
     private void receiveCashServiceStart(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {

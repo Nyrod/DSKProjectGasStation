@@ -7,6 +7,7 @@ import java.util.Random;
 public class Car {
 
     public static final int CARS_IN_SIMULATION = 3;
+    private int carID;
     private String type;
     private boolean wantWash;
 
@@ -28,6 +29,7 @@ public class Car {
     public static Car createCar() {
         Random random = new Random();
         Car car = new Car(random.nextBoolean() ? "ON" : "GAS", random.nextBoolean());
+        car.carID = 1;
         return car;
     }
 
@@ -45,5 +47,9 @@ public class Car {
 
     public void setWantWash(boolean wantWash) {
         this.wantWash = wantWash;
+    }
+
+    public int getCarID() {
+        return carID;
     }
 }

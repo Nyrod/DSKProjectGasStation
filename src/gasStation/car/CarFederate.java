@@ -45,19 +45,16 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void mainSimulationLoop() throws RTIexception {
-        createChooseDistiributorInternalEvent();
+        createChooseDistributorInternalEvent();
         while (true) {
             double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
             HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
             advanceTime(nextEventTime);
 
-            if(!internalEventList.isEmpty()) {
+            if (!internalEventList.isEmpty()) {
                 internalEventList.sort(new TimedEventComparator());
                 nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
-//                if((nextEventTime.getValue() - fedamb.federateTime) > fedamb.federateLookahead) {
-//                    advanceTime(timeFactory.makeTime(fedamb.federateTime + 2*fedamb.federateLookahead));
-//                }
-                if(fedamb.federateTime <= nextEventTime.getValue()) {
+                if (fedamb.federateTime <= nextEventTime.getValue()) {
                     internalEventList.remove(0).runEvent();
                     advanceTime(nextEventTime);
                     fedamb.federateTime = nextEventTime.getValue();
@@ -72,7 +69,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 //                advanceTime(nextEventTime);
 //            }
 
-            if(fedamb.grantedTime == timeToAdvance) {
+            if (fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
                 log("Time advanced to: " + timeToAdvance);
             }
@@ -135,7 +132,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-        for (int i = Car.CARS_IN_SIMULATION -1; i >= 0; i--) {
+        for (int i = Car.CARS_IN_SIMULATION - 1; i >= 0; i--) {
             rtiamb.deleteObjectInstance(carList.remove(i).getObjectHandle(), generateTag());
         }
     }
@@ -151,10 +148,10 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         System.out.println("CarFederate   : " + message);
     }
 
-    private void createChooseDistiributorInternalEvent() throws RTIexception {
+    private void createChooseDistributorInternalEvent() throws RTIexception {
         Random rand = new Random();
         double nextTime = fedamb.federateTime;
-        for(int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
+        for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
             nextTime += rand.nextInt(15) + 1;
             internalEventList.add(new Event(timeFactory.makeTime(nextTime)) {
                 @Override
@@ -163,6 +160,16 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
                 }
             });
         }
+    }
+
+    public void addUpdateCarAttributeInternalEvent() throws RTIexception {
+        double time = fedamb.federateTime + fedamb.federateLookahead;
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateCarAttributes(carList.get(0), time);
+            }
+        });
     }
 
     private void sendInteractionChooseDistributor(int distributorID, int carID, HLAfloat64Time time) throws RTIexception {
@@ -192,16 +199,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         log("Interaction Send: handle=" + wantToPay + " {CarWantToPay}, time=" + time.toString());
     }
 
-    private void updateCarAttributes( ObjectInstanceHandle objectHandle, int idCar, boolean wantToWash, boolean payWash) throws RTIexception {
-
+    private void updateCarAttributes(Car car, double time) throws RTIexception {
         AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
-        attributes.put(carID, encoderFactory.createHLAinteger32BE(idCar).toByteArray());
-        attributes.put(wantWash , encoderFactory.createHLAboolean(wantToWash).toByteArray());
-        attributes.put(payForWash, encoderFactory.createHLAboolean(payWash).toByteArray());
+        attributes.put(carID, encoderFactory.createHLAinteger32BE(car.getCarID()).toByteArray());
+        attributes.put(wantWash, encoderFactory.createHLAboolean(car.isWantWash()).toByteArray());
+        attributes.put(payForWash, encoderFactory.createHLAboolean(car.isWantWash()).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+fedamb.federateLookahead);
-
-        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
+        HLAfloat64Time theTime = timeFactory.makeTime(time + 1);
+        log("Updated Car Attributes: time=" + theTime.toString());
+        rtiamb.updateAttributeValues(car.getObjectHandle(), attributes, generateTag(), theTime);
     }
 
 

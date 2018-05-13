@@ -44,13 +44,13 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
             advanceTime(nextEventTime);
 
-            if(!internalEventList.isEmpty()) {
+            if (!internalEventList.isEmpty()) {
                 internalEventList.sort(new TimedEventComparator());
                 nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
 //                if((nextEventTime.getValue() - fedamb.federateTime) > fedamb.federateLookahead) {
 //                    advanceTime(timeFactory.makeTime(fedamb.federateTime + 2*fedamb.federateLookahead));
 //                }
-                if(fedamb.federateTime <= nextEventTime.getValue()) {
+                if (fedamb.federateTime <= nextEventTime.getValue()) {
                     internalEventList.remove(0).runEvent();
                     advanceTime(nextEventTime);
                     fedamb.federateTime = nextEventTime.getValue();
@@ -59,7 +59,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
                 }
             }
 
-            if(fedamb.grantedTime == timeToAdvance) {
+            if (fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
                 log("Time advanced to: " + timeToAdvance);
             }
@@ -124,6 +124,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             public void runEvent() throws RTIexception {
                 double finishTime = time + rand.nextInt(30);
                 sendInteractionDistributorServiceStart(distributorID, carID);
+                updateDistributorAttributes(distributorList.get(0).getObjectInstanceHandle(), 2, "ON", 2, time);
                 addInternalEventFinishService(distributorID, carID, finishTime);
             }
         });
@@ -134,6 +135,16 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             @Override
             public void runEvent() throws RTIexception {
                 sendInteractionDistributorServiceFinish(distributorID, carID, time);
+            }
+        });
+    }
+
+    public void addUpdateDistributorInternalEvent() {
+        double time = fedamb.federateTime;
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateDistributorAttributes(distributorList.get(0).getObjectInstanceHandle(), 2, "ON", 2, time);
             }
         });
     }
@@ -168,17 +179,16 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceFinish}, time=" + theTime.toString());
     }
 
-    private void updateDistributorAttributes( ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSize) throws RTIexception {
+    private void updateDistributorAttributes(ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSize, double time) throws RTIexception {
 
         AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
         attributes.put(distributorID, encoderFactory.createHLAinteger32BE(iDDistributor).toByteArray());
-        attributes.put(distributorType , encoderFactory.createHLAunicodeString(typeOfDistributor).toByteArray());
+        attributes.put(distributorType, encoderFactory.createHLAunicodeString(typeOfDistributor).toByteArray());
         attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributorQueueSize).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+2);
-        log("updateDistributorAttributes");
-
-        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + 1);
+        log("Updated Distributor Attributes: time=" + theTime.toString());
+        rtiamb.updateAttributeValues(objectHandle, attributes, generateTag(), theTime);
     }
 
     @Override
