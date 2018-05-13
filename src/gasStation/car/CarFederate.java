@@ -50,13 +50,6 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
-    protected URL[] modulesToJoin() throws MalformedURLException {
-        return new URL[]{
-                (new File("foms/Car.xml")).toURI().toURL()
-        };
-    }
-
-    @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM {
         // OBJECTS //
         carHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");

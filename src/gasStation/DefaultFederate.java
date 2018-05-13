@@ -37,11 +37,15 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
     }
 
     protected abstract FederateAmbassador createFederateAmbassador();
+
     protected abstract void mainSimulationLoop() throws RTIexception;
-    protected abstract URL[] modulesToJoin() throws MalformedURLException;
+
     protected abstract void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM;
+
     protected abstract void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected;
+
     protected abstract void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected;
+
     protected abstract void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled;
 
     public void runFederate(String federateName, String federateType) throws Exception {
@@ -61,8 +65,16 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         ///////////////////////////
         log("Creating Federation...");
         try {
-            URL module = new File("foms/Distributor.xml").toURI().toURL();
-            rtiamb.createFederationExecution("GasStationFederation", module);
+            URL[] modules = new URL[]{
+                    new File("fom.fed").toURI().toURL()
+
+//                    new File("foms/Distributor.xml").toURI().toURL(),
+//                    new File("foms/Cash.xml").toURI().toURL(),
+//                    new File("foms/CarWash.xml").toURI().toURL(),
+//                    new File("foms/Car.xml").toURI().toURL(),
+//                    new File("foms/Statistics.xml").toURI().toURL(),
+            };
+            rtiamb.createFederationExecution("GasStationFederation", modules);
             log("Created Federation");
         } catch (FederationExecutionAlreadyExists exists) {
             log("Didn't create federation, it already existed");
@@ -75,8 +87,6 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         /////////////////////////
         // join the federation //
         /////////////////////////
-        URL[] joinModules = modulesToJoin();
-
         rtiamb.joinFederationExecution(federateName,
                 "GasStationFederation");
 
@@ -145,6 +155,14 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
             log("No need to destroy federation, it doesn't exist");
         } catch (FederatesCurrentlyJoined fcj) {
             log("Didn't destroy federation, federates still joined");
+        }
+    }
+
+    protected void advanceTime(LogicalTime timestep) throws RTIexception {
+        fedamb.isAdvancing = true;
+        rtiamb.timeAdvanceRequest(timestep);
+        while (fedamb.isAdvancing) {
+            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
     }
 

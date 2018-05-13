@@ -41,13 +41,6 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     }
 
     @Override
-    protected URL[] modulesToJoin() throws MalformedURLException {
-        return new URL[]{
-                (new File("foms/Cash.xml")).toURI().toURL()
-        };
-    }
-
-    @Override
     protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
         // OBJECTS //
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();

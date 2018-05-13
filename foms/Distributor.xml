@@ -42,28 +42,28 @@
                 <sharing>PublishSubscribe</sharing>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
-                <parameter>
-                    <name>DistributorID</name>
-                    <dataType>HLAinteger32BE</dataType>
-                </parameter>
-                <parameter>
-                    <name>CarID</name>
-                    <dataType>HLAinteger32BE</dataType>
-                </parameter>
+                <!--<parameter>-->
+                    <!--<name>DistributorID</name>-->
+                    <!--<dataType>HLAinteger32BE</dataType>-->
+                <!--</parameter>-->
+                <!--<parameter>-->
+                    <!--<name>CarID</name>-->
+                    <!--<dataType>HLAinteger32BE</dataType>-->
+                <!--</parameter>-->
             </interactionClass>
             <interactionClass>
                 <name>DistributorServiceFinish</name>
                 <sharing>PublishSubscribe</sharing>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
-                <parameter>
-                    <name>DistributorID</name>
-                    <dataType>HLAinteger32BE</dataType>
-                </parameter>
-                <parameter>
-                    <name>CarID</name>
-                    <dataType>HLAinteger32BE</dataType>
-                </parameter>
+                <!--<parameter>-->
+                    <!--<name>DistributorID</name>-->
+                    <!--<dataType>HLAinteger32BE</dataType>-->
+                <!--</parameter>-->
+                <!--<parameter>-->
+                    <!--<name>CarID</name>-->
+                    <!--<dataType>HLAinteger32BE</dataType>-->
+                <!--</parameter>-->
             </interactionClass>
         </interactionClass>
     </interactions>
