@@ -38,8 +38,20 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void mainSimulationLoop() {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
         fedamb.timeAdvanceGrant(time);
+        time = timeFactory.makeTime(fedamb.federateTime + 5);
+        fedamb.timeAdvanceGrant(time);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -33,6 +33,8 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void mainSimulationLoop() throws RTIexception {
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
+        fedamb.timeAdvanceGrant(time);
         sendInteractionDistributorServiceFinish(1,2);
         sendInteractionDistributorServiceStart(2, 3);
     }

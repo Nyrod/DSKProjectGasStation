@@ -78,7 +78,6 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         URL[] joinModules = modulesToJoin();
 
         rtiamb.joinFederationExecution(federateName,
-                federateType,
                 "GasStationFederation",
                 joinModules);
 
