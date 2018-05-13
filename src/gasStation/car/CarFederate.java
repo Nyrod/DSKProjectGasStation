@@ -5,9 +5,6 @@ import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
@@ -42,6 +39,9 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
             double timeToAdvance = fedamb.federateTime + 5;
             HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
             advanceTime(time);
+
+            sendInteractionChooseDistributor(1, 2);
+            sendInteractionWantToPay(1);
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
@@ -95,7 +95,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
         carList = new ArrayList<>();
         for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
-            Car carToAdd = new Car();
+            Car carToAdd = Car.createCar();
             carToAdd.setObjectHandle(rtiamb.registerObjectInstance(carHandle));
             carList.add(carToAdd);
             log("Registered Object, handle=" + carToAdd.getObjectHandle());
@@ -118,6 +118,33 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     @Override
     protected void log(String message) {
         System.out.println("CarFederate   : " + message);
+    }
+
+    private void sendInteractionChooseDistributor(int distributorID, int carID) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "DistributorID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
+
+        parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 1);
+        rtiamb.sendInteraction(chooseDistributor, parameters, generateTag(), time);
+
+        log("Interaction Send: handle=" + chooseDistributor + " {CarChooseDistributor}, time=" + time.toString());
+    }
+
+    private void sendInteractionWantToPay(int carID) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(1);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(wantToPay, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 2); // +1?
+        rtiamb.sendInteraction(wantToPay, parameters, generateTag(), time);
+
+        log("Interaction Send: handle=" + wantToPay + " {CarWantToPay}, time=" + time.toString());
     }
 
 

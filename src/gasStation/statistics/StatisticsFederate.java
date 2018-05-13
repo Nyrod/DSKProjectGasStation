@@ -6,10 +6,7 @@ import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.*;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
+import hla.rti1516e.time.HLAfloat64Time;
 
 /**
  * Created by Michał on 2018-05-11.
@@ -46,8 +43,16 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     }
 
     @Override
-    protected void mainSimulationLoop() {
+    protected void mainSimulationLoop() throws RTIexception {
+        while (true) {
+            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+            HLAfloat64Time time = timeFactory.makeTime(timeToAdvance);
+            advanceTime(time);
 
+            if(fedamb.grantedTime == timeToAdvance) {
+                fedamb.federateTime = timeToAdvance;
+            }
+        }
     }
 
     @Override

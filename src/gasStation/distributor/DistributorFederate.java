@@ -38,7 +38,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             advanceTime(time);
 
             sendInteractionDistributorServiceStart(2, 3);
-//            sendInteractionDistributorServiceFinish(1, 2);
+            sendInteractionDistributorServiceFinish(1, 2);
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
