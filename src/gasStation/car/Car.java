@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class Car {
 
-    public static final int CARS_IN_SIMULATION = 10;
+    public static final int CARS_IN_SIMULATION = 3;
     private String type;
     private boolean wantWash;
 

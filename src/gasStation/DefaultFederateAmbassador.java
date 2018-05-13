@@ -67,7 +67,6 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
     public void timeAdvanceGrant(LogicalTime theTime) {
         this.grantedTime = ((HLAfloat64Time) theTime).getValue();
         this.isAdvancing = false;
-        log("Time Advance Granted: currentTime=" + theTime);
     }
 
     @Override

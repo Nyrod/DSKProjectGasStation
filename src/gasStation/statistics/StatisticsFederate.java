@@ -33,13 +33,16 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     protected InteractionClassHandle chooseDistributor;
     protected InteractionClassHandle wantToPay;
 
+
     public StatisticsFederate() {
         this.statistics = new Statistics();
     }
 
     @Override
     protected StatisticsFederateAmbassador createFederateAmbassador() {
-        return new StatisticsFederateAmbassador(this);
+        StatisticsFederateAmbassador statisticsFederateAmbassador = new StatisticsFederateAmbassador(this);
+        statisticsFederateAmbassador.federateLookahead = 5;
+        return statisticsFederateAmbassador;
     }
 
     @Override
@@ -51,6 +54,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
+                log("Time advanced to: " + timeToAdvance);
             }
         }
     }

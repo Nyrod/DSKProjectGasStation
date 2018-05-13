@@ -1,15 +1,21 @@
 package gasStation.car;
 
 import gasStation.DefaultFederate;
+import gasStation.Event;
+import gasStation.TimedEventComparator;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
+import hla.rti1516e.time.HLAfloat64Interval;
 import hla.rti1516e.time.HLAfloat64Time;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
-    protected ArrayList<Car> carList;
+    protected List<Car> carList;
+    private List<Event> internalEventList;
 
     protected ObjectClassHandle carHandle;
     protected AttributeHandle carID;
@@ -27,6 +33,11 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle cashServiceFinish;
 
+    public CarFederate() {
+        this.carList = new ArrayList<>();
+        this.internalEventList = new ArrayList<>();
+    }
+
     @Override
     protected CarFederateAmbassador createFederateAmbassador() {
         return new CarFederateAmbassador(this);
@@ -34,17 +45,38 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void mainSimulationLoop() throws RTIexception {
+        createChooseDistiributorInternalEvent();
         while (true) {
-            double timeToAdvance = fedamb.federateTime + 5;
-            HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
-            advanceTime(time);
+            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+            HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
+            advanceTime(nextEventTime);
 
-            //sendInteractionChooseDistributor(1, 2);
-            //sendInteractionWantToPay(1);
+            if(!internalEventList.isEmpty()) {
+                internalEventList.sort(new TimedEventComparator());
+                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
+//                if((nextEventTime.getValue() - fedamb.federateTime) > fedamb.federateLookahead) {
+//                    advanceTime(timeFactory.makeTime(fedamb.federateTime + 2*fedamb.federateLookahead));
+//                }
+                if(fedamb.federateTime <= nextEventTime.getValue()) {
+                    internalEventList.remove(0).runEvent();
+                    advanceTime(nextEventTime);
+                    fedamb.federateTime = nextEventTime.getValue();
+                } else {
+                    internalEventList.remove(0);
+                }
+            }
+//            if(!internalEventList.isEmpty()) {
+//                internalEventList.sort(new TimedEventComparator());
+//                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
+//                internalEventList.remove(0).runEvent();
+//                advanceTime(nextEventTime);
+//            }
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
+                log("Time advanced to: " + timeToAdvance);
             }
+            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
     }
 
@@ -79,15 +111,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
         distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
-//        cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
-//        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
+        cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
+        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
 
         rtiamb.publishInteractionClass(chooseDistributor);
         rtiamb.publishInteractionClass(wantToPay);
         rtiamb.subscribeInteractionClass(distributorServiceStart);
         rtiamb.subscribeInteractionClass(distributorServiceFinish);
-//        rtiamb.subscribeInteractionClass(cashServiceStart);
-//        rtiamb.subscribeInteractionClass(cashServiceFinish);
+        rtiamb.subscribeInteractionClass(cashServiceStart);
+        rtiamb.subscribeInteractionClass(cashServiceFinish);
     }
 
     @Override
@@ -119,7 +151,21 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         System.out.println("CarFederate   : " + message);
     }
 
-    private void sendInteractionChooseDistributor(int distributorID, int carID) throws RTIexception {
+    private void createChooseDistiributorInternalEvent() throws RTIexception {
+        Random rand = new Random();
+        double nextTime = fedamb.federateTime;
+        for(int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
+            nextTime += rand.nextInt(15) + 1;
+            internalEventList.add(new Event(timeFactory.makeTime(nextTime)) {
+                @Override
+                public void runEvent() throws RTIexception {
+                    sendInteractionChooseDistributor(2, 3, getTime());
+                }
+            });
+        }
+    }
+
+    private void sendInteractionChooseDistributor(int distributorID, int carID, HLAfloat64Time time) throws RTIexception {
         ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
 
         ParameterHandle parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "DistributorID");
@@ -128,8 +174,8 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 1);
-        rtiamb.sendInteraction(chooseDistributor, parameters, generateTag(), time);
+        HLAfloat64Interval add = timeFactory.makeInterval(1);
+        rtiamb.sendInteraction(chooseDistributor, parameters, generateTag(), time.add(add));
 
         log("Interaction Send: handle=" + chooseDistributor + " {CarChooseDistributor}, time=" + time.toString());
     }
@@ -157,6 +203,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
         rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
     }
+
 
     public static void main(String[] args) {
         try {
