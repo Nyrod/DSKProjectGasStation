@@ -37,15 +37,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
-    protected void mainSimulationLoop() {
+    protected void mainSimulationLoop() throws RTIexception {
         while (true) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            double timeToAdvance = fedamb.federateTime + 5;
             HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
-            fedamb.timeAdvanceGrant(time);
+            advanceTime(time);
+
+            if(fedamb.grantedTime == timeToAdvance) {
+                fedamb.federateTime = timeToAdvance;
+            }
         }
     }
 

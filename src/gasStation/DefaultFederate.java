@@ -66,13 +66,11 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         log("Creating Federation...");
         try {
             URL[] modules = new URL[]{
-                    new File("fom.fed").toURI().toURL()
-
-//                    new File("foms/Distributor.xml").toURI().toURL(),
-//                    new File("foms/Cash.xml").toURI().toURL(),
-//                    new File("foms/CarWash.xml").toURI().toURL(),
-//                    new File("foms/Car.xml").toURI().toURL(),
-//                    new File("foms/Statistics.xml").toURI().toURL(),
+                    new File("foms/Distributor.xml").toURI().toURL(),
+                    new File("foms/Cash.xml").toURI().toURL(),
+                    new File("foms/CarWash.xml").toURI().toURL(),
+                    new File("foms/Car.xml").toURI().toURL(),
+                    new File("foms/Statistics.xml").toURI().toURL()
             };
             rtiamb.createFederationExecution("GasStationFederation", modules);
             log("Created Federation");
@@ -158,7 +156,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         }
     }
 
-    protected void advanceTime(LogicalTime timestep) throws RTIexception {
+    public void advanceTime(LogicalTime timestep) throws RTIexception {
         fedamb.isAdvancing = true;
         rtiamb.timeAdvanceRequest(timestep);
         while (fedamb.isAdvancing) {

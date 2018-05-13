@@ -3,6 +3,7 @@ package gasStation.car;
 import gasStation.DefaultFederateAmbassador;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.RTIexception;
 
 public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate> {
 
@@ -12,32 +13,18 @@ public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate
 
     @Override
     public void receiveInteraction(InteractionClassHandle interactionClass, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
-        StringBuilder log = new StringBuilder("Interaction Received:");
-        log.append(" handle=" + interactionClass);
-        logReceiveInteraction(log, theParameters, userSuppliedTag, null);
+        System.out.println("Interaction Received:");
+
     }
 
     @Override
     public void receiveInteraction(InteractionClassHandle interactionClass, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, MessageRetractionHandle retractionHandle, SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
-        StringBuilder log = new StringBuilder("Interaction Received:");
-        log.append(" handle=" + interactionClass);
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        System.out.println("Interaction Received:");
     }
 
     @Override
     public void receiveInteraction(InteractionClassHandle interactionClass, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
-        StringBuilder log = new StringBuilder("Interaction Received:");
-        log.append(" handle=" + interactionClass);
-
-        if (interactionClass.equals(federate.distributorServiceStart)) {
-            receiveDistributorServiceStart(log, theParameters, userSuppliedTag, theTime);
-        } else if (interactionClass.equals(federate.distributorServiceFinish)) {
-            receiveDistributorServiceFinish(log, theParameters, userSuppliedTag, theTime);
-        } else if (interactionClass.equals(federate.cashServiceStart)) {
-            receiveCashServiceStart(log, theParameters, userSuppliedTag, theTime);
-        } else if (interactionClass.equals(federate.cashServiceFinish)) {
-            receiveCashServiceFinish(log, theParameters, userSuppliedTag, theTime);
-        }
+        System.out.println("Interaction Received:");
     }
 
     private void receiveDistributorServiceStart(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {

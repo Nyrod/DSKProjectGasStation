@@ -12,6 +12,8 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     private List<Distributor> distributorList;
 
+    private final double timeStep = 10.0;
+
     protected ObjectClassHandle distributorClassHandle;
     protected AttributeHandle distributorID;
     protected AttributeHandle distributorType;
@@ -31,17 +33,16 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     @Override
     protected void mainSimulationLoop() throws RTIexception {
         while (true) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+            HLAfloat64Time time = timeFactory.makeTime(timeToAdvance);
+            advanceTime(time);
+
             sendInteractionDistributorServiceStart(2, 3);
-            sendInteractionDistributorServiceFinish(1,2);
-            HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 1);
-            advanceTime(time);
-            time = timeFactory.makeTime(fedamb.federateTime + 2);
-            advanceTime(time);
+//            sendInteractionDistributorServiceFinish(1, 2);
+
+            if(fedamb.grantedTime == timeToAdvance) {
+                fedamb.federateTime = timeToAdvance;
+            }
         }
     }
 
@@ -103,7 +104,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 //        parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "CarID");
 //        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 1);
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 2);
         rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), time);
 
         log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + time.toString());
@@ -118,7 +119,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 //        parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
 //        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 2);
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime);
         rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), time);
 
         log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceStart}, time=" + time.toString());

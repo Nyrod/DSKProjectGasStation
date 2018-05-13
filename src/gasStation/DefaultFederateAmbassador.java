@@ -9,6 +9,7 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
     protected Federate federate;
 
     public double federateTime = 0.0;
+    public double grantedTime = 0.0;
     public double federateLookahead = 1.0;
 
     protected boolean isRegulating = false;
@@ -63,11 +64,10 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
         this.isConstrained = true;
     }
 
-    @Override
-    public void timeAdvanceGrant(LogicalTime time) {
-        this.federateTime = ((HLAfloat64Time) time).getValue();
+    public void timeAdvanceGrant(LogicalTime theTime) {
+        this.grantedTime = ((HLAfloat64Time) theTime).getValue();
         this.isAdvancing = false;
-        log("Time Advance Granted: currentTime=" + time);
+        log("Time Advance Granted: currentTime=" + theTime);
     }
 
     @Override
