@@ -41,7 +41,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     @Override
     protected URL[] modulesToJoin() throws MalformedURLException {
         return new URL[] {
-                new File("/foms/Distributor.xml").toURI().toURL()
+                new File("foms/Distributor.xml").toURI().toURL()
         };
     }
 
