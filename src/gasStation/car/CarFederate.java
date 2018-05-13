@@ -27,7 +27,6 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle cashServiceFinish;
 
-
     @Override
     protected CarFederateAmbassador createFederateAmbassador() {
         return new CarFederateAmbassador(this);
@@ -40,8 +39,8 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
             HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
             advanceTime(time);
 
-            sendInteractionChooseDistributor(1, 2);
-            sendInteractionWantToPay(1);
+            //sendInteractionChooseDistributor(1, 2);
+            //sendInteractionWantToPay(1);
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
@@ -158,7 +157,6 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
         rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
     }
-
 
     public static void main(String[] args) {
         try {

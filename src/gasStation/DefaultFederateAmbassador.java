@@ -90,4 +90,20 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
         log(log.toString());
     }
 
+    protected void logReflecteObject(StringBuilder builder, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
+        builder.append(", tag=" + new String(tag));
+        if (time != null) {
+            builder.append(", time=" + ((HLAfloat64Time) time).getValue());
+        }
+
+        builder.append(", attributeCount=" + theAttributes.size());
+        builder.append("\n");
+
+        for (AttributeHandle attributeHandle : theAttributes.keySet()) {
+            builder.append("\tattributeValue=");
+            theAttributes.getValueReference(attributeHandle);
+            builder.append("\n");
+        }
+        log(builder.toString());
+    }
 }

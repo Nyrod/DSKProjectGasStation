@@ -37,8 +37,9 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             HLAfloat64Time time = timeFactory.makeTime(timeToAdvance);
             advanceTime(time);
 
-            sendInteractionDistributorServiceStart(2, 3);
-            sendInteractionDistributorServiceFinish(1, 2);
+            //sendInteractionDistributorServiceStart(2, 3);
+            //sendInteractionDistributorServiceFinish(1, 2);
+            updateDistributorAttributes(distributorList.get(0).getObjectInstanceHandle(), 1, "ON", 3);
 
             if(fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
@@ -76,16 +77,16 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
         for (int i = 0; i < Distributor.DISTRIBUTORS_IN_SIMULATION; i++) {
             Distributor distributor = new Distributor();
-            distributor.setObjectHandle(rtiamb.registerObjectInstance(distributorClassHandle));
+            distributor.setObjectInstanceHandle(rtiamb.registerObjectInstance(distributorClassHandle));
             distributorList.add(distributor);
-            log("Registered Object, handle=" + distributor.getObjectHandle());
+            log("Registered Object, handle=" + distributor.getObjectInstanceHandle());
         }
     }
 
     @Override
     protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
         for (int i = Distributor.DISTRIBUTORS_IN_SIMULATION - 1; i >= 0; i--) {
-            rtiamb.deleteObjectInstance(distributorList.remove(i).getObjectHandle(), generateTag());
+            rtiamb.deleteObjectInstance(distributorList.remove(i).getObjectInstanceHandle(), generateTag());
         }
     }
 
@@ -125,16 +126,17 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceStart}, time=" + time.toString());
     }
 
-    private void updateDistributorAttributes( ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSiz) throws RTIexception {
+    private void updateDistributorAttributes( ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSize) throws RTIexception {
 
         AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
         attributes.put(distributorID, encoderFactory.createHLAinteger32BE(iDDistributor).toByteArray());
         attributes.put(distributorType , encoderFactory.createHLAunicodeString(typeOfDistributor).toByteArray());
-        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributorQueueSiz).toByteArray());
+        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributorQueueSize).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+fedamb.federateLookahead );
+        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+2);
+        log("updateDistributorAttributes");
 
-        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
+        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time);
     }
 
     @Override

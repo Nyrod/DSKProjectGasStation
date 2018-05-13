@@ -10,14 +10,14 @@ public class Distributor {
     private ArrayList<Integer> carIds;
     private String type;
 
-    private ObjectInstanceHandle objectHandle;
+    private ObjectInstanceHandle objectInstanceHandle;
 
-    public ObjectInstanceHandle getObjectHandle() {
-        return objectHandle;
+    public ObjectInstanceHandle getObjectInstanceHandle() {
+        return objectInstanceHandle;
     }
 
-    public void setObjectHandle(ObjectInstanceHandle objectHandle) {
-        this.objectHandle = objectHandle;
+    public void setObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle) {
+        this.objectInstanceHandle = objectInstanceHandle;
     }
 
     public Distributor() {

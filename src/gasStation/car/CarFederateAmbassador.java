@@ -38,6 +38,50 @@ public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate
        }
     }
 
+    @Override
+    public void reflectAttributeValues( ObjectInstanceHandle theObject,
+                                        AttributeHandleValueMap theAttributes,
+                                        byte[] tag,
+                                        OrderType sentOrder,
+                                        TransportationTypeHandle transport,
+                                        SupplementalReflectInfo reflectInfo )
+            throws FederateInternalError
+    {
+        // just pass it on to the other method for printing purposes
+        // passing null as the time will let the other method know it
+        // it from us, not from the RTI
+        reflectAttributeValues( theObject,
+                theAttributes,
+                tag,
+                sentOrder,
+                transport,
+                null,
+                sentOrder,
+                reflectInfo );
+    }
+
+    @Override
+    public void reflectAttributeValues (ObjectInstanceHandle theObject,
+                                        AttributeHandleValueMap theAttributes,
+                                        byte[] tag,
+                                        OrderType sentOrdering,
+                                        TransportationTypeHandle theTransport,
+                                        LogicalTime time,
+                                        OrderType receivedOrdering,
+                                        SupplementalReflectInfo reflectInfo)
+            throws FederateInternalError
+    {
+        StringBuilder builder = new StringBuilder( "Reflection for object:" );
+        builder.append( " handle=" + theObject );
+        reflectDistributor(builder, tag, time, theAttributes);
+    }
+
+    private void reflectDistributor(StringBuilder log, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
+        log.append(" {DistributorObject");
+        logReflecteObject(log, tag, time, theAttributes);
+    }
+
+
     private void receiveDistributorServiceStart(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
         log.append(" {DistributorServiceStart}");
         logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
