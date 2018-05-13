@@ -33,10 +33,17 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void mainSimulationLoop() throws RTIexception {
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
-        fedamb.timeAdvanceGrant(time);
-        sendInteractionDistributorServiceFinish(1,2);
-        sendInteractionDistributorServiceStart(2, 3);
+        while (true) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
+            fedamb.timeAdvanceGrant(time);
+            sendInteractionDistributorServiceFinish(1,2);
+            sendInteractionDistributorServiceStart(2, 3);
+        }
     }
 
     @Override
@@ -47,7 +54,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     }
 
     @Override
-    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
+    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM {
         // OBJECTS //
         distributorClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Distributor");
         distributorID = rtiamb.getAttributeHandle(distributorClassHandle, "DistributorID");
@@ -67,6 +74,9 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
         rtiamb.publishInteractionClass(distributorServiceStart);
         rtiamb.publishInteractionClass(distributorServiceFinish);
+
+        rtiamb.subscribeInteractionClass(distributorServiceStart);
+        rtiamb.subscribeInteractionClass(distributorServiceFinish);
     }
 
     @Override
@@ -88,8 +98,8 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     @Override
     protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
-        enableTimeConstrained();
         enableTimeRegulation();
+        enableTimeConstrained();
     }
 
     private void sendInteractionDistributorServiceStart(int distributorID, int carID) throws RTIexception {
@@ -102,7 +112,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + fedamb.federateLookahead);
-        rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), time);
+        rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag());
 
         log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + time.toString());
     }
@@ -116,7 +126,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + fedamb.federateLookahead + fedamb.federateLookahead);
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime -3);
         rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), time);
 
         log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceStart}, time=" + time.toString());

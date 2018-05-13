@@ -61,7 +61,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         ///////////////////////////
         log("Creating Federation...");
         try {
-            URL module = new File("foms/StartFom.xml").toURI().toURL();
+            URL module = new File("foms/Distributor.xml").toURI().toURL();
             rtiamb.createFederationExecution("GasStationFederation", module);
             log("Created Federation");
         } catch (FederationExecutionAlreadyExists exists) {
@@ -78,8 +78,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         URL[] joinModules = modulesToJoin();
 
         rtiamb.joinFederationExecution(federateName,
-                "GasStationFederation",
-                joinModules);
+                "GasStationFederation");
 
         log("Joined Federation as " + federateName);
 

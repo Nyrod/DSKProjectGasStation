@@ -1,8 +1,6 @@
 <component name="libraryTable">
   <library name="portico">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/portico.jar!/" />
-    </CLASSES>
+    <CLASSES />
     <JAVADOC />
     <SOURCES />
   </library>
