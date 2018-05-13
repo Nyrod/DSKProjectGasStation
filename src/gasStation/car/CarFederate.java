@@ -38,7 +38,8 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     @Override
     protected void mainSimulationLoop() {
-
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 5);
+        fedamb.timeAdvanceGrant(time);
     }
 
     @Override
@@ -79,15 +80,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
         distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
-        cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
-        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
+//        cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
+//        cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
 
         rtiamb.publishInteractionClass(chooseDistributor);
         rtiamb.publishInteractionClass(wantToPay);
         rtiamb.subscribeInteractionClass(distributorServiceStart);
         rtiamb.subscribeInteractionClass(distributorServiceFinish);
-        rtiamb.subscribeInteractionClass(cashServiceStart);
-        rtiamb.subscribeInteractionClass(cashServiceFinish);
+//        rtiamb.subscribeInteractionClass(cashServiceStart);
+//        rtiamb.subscribeInteractionClass(cashServiceFinish);
     }
 
     @Override

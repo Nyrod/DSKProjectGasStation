@@ -40,7 +40,6 @@
             <interactionClass>
                 <name>DistributorServiceStart</name>
                 <sharing>PublishSubscribe</sharing>
-                <dimensions/>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
                 <parameter>
@@ -55,7 +54,6 @@
             <interactionClass>
                 <name>DistributorServiceFinish</name>
                 <sharing>PublishSubscribe</sharing>
-                <dimensions/>
                 <transportation>HLAreliable</transportation>
                 <order>TimeStamp</order>
                 <parameter>
