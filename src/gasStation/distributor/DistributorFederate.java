@@ -125,6 +125,18 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceStart}, time=" + time.toString());
     }
 
+    private void updateDistributorAttributes( ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSiz) throws RTIexception {
+
+        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
+        attributes.put(distributorID, encoderFactory.createHLAinteger32BE(iDDistributor).toByteArray());
+        attributes.put(distributorType , encoderFactory.createHLAunicodeString(typeOfDistributor).toByteArray());
+        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributorQueueSiz).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+fedamb.federateLookahead );
+
+        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
+    }
+
     @Override
     protected void log(String message) {
         System.out.println("DistributorFederate   : " + message);

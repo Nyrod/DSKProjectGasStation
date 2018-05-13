@@ -147,6 +147,18 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         log("Interaction Send: handle=" + wantToPay + " {CarWantToPay}, time=" + time.toString());
     }
 
+    private void updateCarAttributes( ObjectInstanceHandle objectHandle, int idCar, boolean wantToWash, boolean payWash) throws RTIexception {
+
+        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
+        attributes.put(carID, encoderFactory.createHLAinteger32BE(idCar).toByteArray());
+        attributes.put(wantWash , encoderFactory.createHLAboolean(wantToWash).toByteArray());
+        attributes.put(payForWash, encoderFactory.createHLAboolean(payWash).toByteArray());
+
+        HLAfloat64Time time = timeFactory.makeTime( fedamb.federateTime+fedamb.federateLookahead);
+
+        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
+    }
+
 
     public static void main(String[] args) {
         try {
