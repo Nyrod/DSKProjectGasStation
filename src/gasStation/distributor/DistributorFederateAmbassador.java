@@ -12,11 +12,6 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
     }
 
     @Override
-    protected void log(String message) {
-        System.out.println("DistributorFederateAmbassador   : " + message);
-    }
-
-    @Override
     public void receiveInteraction(InteractionClassHandle interactionClass, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
         StringBuilder log = new StringBuilder("Interaction Received:");
         log.append(" handle=" + interactionClass);
@@ -29,7 +24,16 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
     private void receiveChooseDistributor(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
         log.append(" {ChooseDistributor}");
         logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
-        federate.addInternalEventStartService(2, 2);
+        try {
+            externalEventList.add(federate.createAddToQueueCarEvent(theParameters));
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void log(String message) {
+        System.out.println("DistributorFederateAmbassador   : " + message);
     }
 
 }

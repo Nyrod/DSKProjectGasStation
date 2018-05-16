@@ -24,8 +24,8 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     protected AttributeHandle cashQueueSize;
     // obiekt myjnia
     protected ObjectClassHandle carWashHandle;
-    protected AttributeHandle carhWashQueueSize;
-    protected AttributeHandle isFree;
+    protected AttributeHandle carWashQueueSize;
+    protected AttributeHandle currentServiceCarID;
     // interakcje
     protected InteractionClassHandle distributorServiceStart;
     protected InteractionClassHandle distributorServiceFinish;
@@ -35,6 +35,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
 
     public StatisticsFederate() {
+        super();
         this.statistics = new Statistics();
     }
 
@@ -80,10 +81,10 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
         attributes.clear();
         carWashHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.CarWash");
-        carhWashQueueSize = rtiamb.getAttributeHandle(carWashHandle, "QueueSize");
-        isFree = rtiamb.getAttributeHandle(carWashHandle, "IsFree");
-        attributes.add(carhWashQueueSize);
-        attributes.add(isFree);
+        carWashQueueSize = rtiamb.getAttributeHandle(carWashHandle, "QueueSize");
+        currentServiceCarID = rtiamb.getAttributeHandle(carWashHandle, "CurrentServiceCarID");
+        attributes.add(carWashQueueSize);
+        attributes.add(currentServiceCarID);
         rtiamb.subscribeObjectClassAttributes(carWashHandle, attributes);
 
         // INTERAKCJE

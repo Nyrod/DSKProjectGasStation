@@ -3,14 +3,48 @@ package gasStation.distributor;
 import hla.rti1516e.ObjectInstanceHandle;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Distributor {
 
     public static int DISTRIBUTORS_IN_SIMULATION = 5;
-    private ArrayList<Integer> carIds;
+    private static int NEXT_DISTRIBUTOR_ID = 0;
+
+    private ArrayList<Integer> queue;
+    private int distributorID;
     private String type;
 
     private ObjectInstanceHandle objectInstanceHandle;
+
+
+    private Distributor() {
+        Random rand = new Random();
+        this.queue = new ArrayList<>();
+        this.distributorID = NEXT_DISTRIBUTOR_ID;
+        this.type = rand.nextBoolean() ? "ON" : "GAS";
+
+        NEXT_DISTRIBUTOR_ID++;
+    }
+
+    public static Distributor getNextDistributor() {
+        return new Distributor();
+    }
+
+    public void addCar(int carId) {
+        queue.add(carId);
+    }
+
+    public int getCar() {
+        return queue.remove(0);
+    }
+
+    public int getQueueSize() {
+        return queue.size();
+    }
+
+    public boolean haveCarInQueue() {
+        return !queue.isEmpty();
+    }
 
     public ObjectInstanceHandle getObjectInstanceHandle() {
         return objectInstanceHandle;
@@ -20,31 +54,20 @@ public class Distributor {
         this.objectInstanceHandle = objectInstanceHandle;
     }
 
-    public Distributor() {
-        this.carIds = new ArrayList<>();
-    }
-
-    public void addCar(int carId) {
-        carIds.add(carId);
-    }
-
-    public int getCar() {
-        return carIds.get(0);
-    }
-
-    public ArrayList<Integer> getCarIds() {
-        return carIds;
-    }
-
-    public void setCarIds(ArrayList<Integer> carIds) {
-        this.carIds = carIds;
-    }
-
     public String getType() {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public int getDistributorID() {
+        return distributorID;
+    }
+
+    @Override
+    public String toString() {
+        return "Distributor{" +
+                "distributorID=" + distributorID +
+                ", type='" + type + '\'' +
+                ", queueSize=" + queue.size() +
+                '}';
     }
 }

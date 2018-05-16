@@ -14,7 +14,6 @@ import java.util.Random;
 public class DistributorFederate extends DefaultFederate<DistributorFederateAmbassador> {
 
     private List<Distributor> distributorList;
-    private List<Event> internalEventList;
 
     private final double timeStep = 10.0;
 
@@ -28,8 +27,8 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     protected InteractionClassHandle chooseDistributor;
 
     public DistributorFederate() {
+        super();
         distributorList = new ArrayList<>();
-        internalEventList = new ArrayList<>();
     }
 
     @Override
@@ -67,8 +66,112 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         }
     }
 
+    public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception{
+        ParameterHandle distributorIDParameter = rtiamb.getParameterHandle(chooseDistributor, "DistributorID");
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(chooseDistributor, "CarID");
+        int distributorID = theParameters.getValueReference(distributorIDParameter).getInt();
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        Distributor distributor = getDistributorByID(distributorID);
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                if(!distributor.haveCarInQueue()) {
+                    createStartServiceEvent(distributor.getDistributorID(), fedamb.federateTime + fedamb.federateLookahead);
+                }
+                distributor.addCar(carID);
+                createUpdateDistributorInstanceEvent(distributor, fedamb.federateTime + fedamb.federateLookahead);
+            }
+        };
+    }
+
+    public void createUpdateDistributorInstanceEvent(Distributor distributor, double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateDistributorAttributes(distributor, time);
+            }
+        });
+    }
+
+    public void createStartServiceEvent(int distributorID, double time) {
+        Random rand = new Random();
+        Distributor distributor = getDistributorByID(distributorID);
+        int carID = distributor.getCar();
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                sendInteractionDistributorServiceStart(distributor.getDistributorID(), carID, time);
+                updateDistributorAttributes(distributor, time);
+            }
+        });
+        createFinishServiceEvent(distributor, carID, time + rand.nextInt(20) + 10);
+    }
+
+    public void createFinishServiceEvent(Distributor distributor, int carID, double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                sendInteractionDistributorServiceFinish(distributor.getDistributorID(), carID, time);
+                if (distributor.haveCarInQueue()) {
+                    createStartServiceEvent(distributor.getDistributorID(), time + fedamb.federateLookahead);
+                }
+            }
+        });
+    }
+
+    private void sendInteractionDistributorServiceStart(int distributorID, int carID, double time) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "DistributorID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
+
+        parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), theTime);
+
+        log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + theTime.toString());
+    }
+
+    private void sendInteractionDistributorServiceFinish(int distributorID, int carID, double time) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "DistributorID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
+
+        parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), theTime);
+
+        log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceFinish}, time=" + theTime.toString());
+    }
+
+    private void updateDistributorAttributes(Distributor distributor, double time) throws RTIexception {
+
+        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
+        attributes.put(distributorID, encoderFactory.createHLAinteger32BE(distributor.getDistributorID()).toByteArray());
+        attributes.put(distributorType, encoderFactory.createHLAunicodeString(distributor.getType()).toByteArray());
+        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributor.getQueueSize()).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.updateAttributeValues(distributor.getObjectInstanceHandle(), attributes, generateTag(), theTime);
+
+        log("Updated Distributor Attributes: " + distributor.toString() + ", time=" + theTime.toString());
+    }
+
+    private Distributor getDistributorByID(int distributorID) {
+        for(int i = 0; i < distributorList.size(); i++) {
+            if(distributorList.get(i).getDistributorID() == distributorID)
+                return distributorList.get(i);
+        }
+        return null;
+    }
+
     @Override
-    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM {
+    protected void publishAndSubscribe() throws RTIexception {
         // OBJECTS //
         distributorClassHandle = rtiamb.getObjectClassHandle("ObjectRoot.Distributor");
         distributorID = rtiamb.getAttributeHandle(distributorClassHandle, "DistributorID");
@@ -94,9 +197,9 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     }
 
     @Override
-    protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
+    protected void registerObjects() throws RTIexception {
         for (int i = 0; i < Distributor.DISTRIBUTORS_IN_SIMULATION; i++) {
-            Distributor distributor = new Distributor();
+            Distributor distributor = Distributor.getNextDistributor();
             distributor.setObjectInstanceHandle(rtiamb.registerObjectInstance(distributorClassHandle));
             distributorList.add(distributor);
             log("Registered Object, handle=" + distributor.getObjectInstanceHandle());
@@ -104,91 +207,16 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     }
 
     @Override
-    protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
+    protected void deleteObjects() throws RTIexception {
         for (int i = Distributor.DISTRIBUTORS_IN_SIMULATION - 1; i >= 0; i--) {
             rtiamb.deleteObjectInstance(distributorList.remove(i).getObjectInstanceHandle(), generateTag());
         }
     }
 
     @Override
-    protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
+    protected void enableTimePolicy() throws RTIexception {
         enableTimeRegulation();
         enableTimeConstrained();
-    }
-
-    public void addInternalEventStartService(int distributorID, int carID) {
-        Random rand = new Random();
-        double time = fedamb.federateTime + rand.nextInt(15) + fedamb.federateLookahead;
-        internalEventList.add(new Event(timeFactory.makeTime(time)) {
-            @Override
-            public void runEvent() throws RTIexception {
-                double finishTime = time + rand.nextInt(30);
-                sendInteractionDistributorServiceStart(distributorID, carID);
-                updateDistributorAttributes(distributorList.get(0).getObjectInstanceHandle(), 2, "ON", 2, time);
-                addInternalEventFinishService(distributorID, carID, finishTime);
-            }
-        });
-    }
-
-    public void addInternalEventFinishService(int distributorID, int carID, double time) {
-        internalEventList.add(new Event(timeFactory.makeTime(time)) {
-            @Override
-            public void runEvent() throws RTIexception {
-                sendInteractionDistributorServiceFinish(distributorID, carID, time);
-            }
-        });
-    }
-
-    public void addUpdateDistributorInternalEvent() {
-        double time = fedamb.federateTime;
-        internalEventList.add(new Event(timeFactory.makeTime(time)) {
-            @Override
-            public void runEvent() throws RTIexception {
-                updateDistributorAttributes(distributorList.get(0).getObjectInstanceHandle(), 2, "ON", 2, time);
-            }
-        });
-    }
-
-    private void sendInteractionDistributorServiceStart(int distributorID, int carID) throws RTIexception {
-        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
-
-        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "DistributorID");
-        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
-
-        parameterHandle = rtiamb.getParameterHandle(distributorServiceStart, "CarID");
-        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
-
-        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + 2);
-        rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), time);
-
-        log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + time.toString());
-    }
-
-    private void sendInteractionDistributorServiceFinish(int distributorID, int carID, double time) throws RTIexception {
-        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(2);
-
-        ParameterHandle parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "DistributorID");
-        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(distributorID).toByteArray());
-
-        parameterHandle = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
-        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
-
-        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
-        rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), theTime);
-
-        log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceFinish}, time=" + theTime.toString());
-    }
-
-    private void updateDistributorAttributes(ObjectInstanceHandle objectHandle, int iDDistributor, String typeOfDistributor, int distributorQueueSize, double time) throws RTIexception {
-
-        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
-        attributes.put(distributorID, encoderFactory.createHLAinteger32BE(iDDistributor).toByteArray());
-        attributes.put(distributorType, encoderFactory.createHLAunicodeString(typeOfDistributor).toByteArray());
-        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributorQueueSize).toByteArray());
-
-        HLAfloat64Time theTime = timeFactory.makeTime(time + 1);
-        log("Updated Distributor Attributes: time=" + theTime.toString());
-        rtiamb.updateAttributeValues(objectHandle, attributes, generateTag(), theTime);
     }
 
     @Override

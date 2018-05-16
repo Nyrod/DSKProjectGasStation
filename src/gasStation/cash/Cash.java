@@ -35,7 +35,11 @@ public class Cash {
     }
 
     public int getCarIDFromQueue() {
-        return queue.get(0).carID;
+        return queue.remove(0).carID;
+    }
+
+    public boolean haveCarInQueue() {
+        return !queue.isEmpty();
     }
 
     public void addCarFOMInstance(int carID, boolean payForWash) {
@@ -64,6 +68,13 @@ public class Cash {
             i++;
         }
         return i < carList.size() ? carList.get(i) : null;
+    }
+
+    @Override
+    public String toString() {
+        return "Cash{" +
+                "queueSize=" + queue.size() +
+                '}';
     }
 
     private class CarFOM {

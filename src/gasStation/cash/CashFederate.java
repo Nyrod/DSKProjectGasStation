@@ -7,6 +7,8 @@ import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
+import java.util.Random;
+
 /**
  * Created by Michał on 2018-05-11.
  */
@@ -17,10 +19,12 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     protected AttributeHandle queueSize;
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle cashServiceFinish;
+
     protected ObjectClassHandle carClassHandle;
     protected AttributeHandle carID;
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
+    protected InteractionClassHandle wantToPay;
 
     public CashFederate() {
         super();
@@ -45,12 +49,12 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
                 }
             }
 
-            if(!isAdvancing) {
+            if (!isAdvancing) {
                 if (!internalEventList.isEmpty()) {
                     internalEventList.sort(new TimedEventComparator());
                     nextEventTime = internalEventList.get(0).getTime();
                     timeToAdvance = nextEventTime.getValue();
-                    if(nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
+                    if (nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
                         advanceTime(nextEventTime);
                     } else {
                         timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
@@ -70,9 +74,9 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
                 fedamb.federateTime = timeToAdvance;
                 log("Time advanced to: " + timeToAdvance);
 
-                if(!internalEventList.isEmpty()) {
+                if (!internalEventList.isEmpty()) {
                     internalEventList.sort(new TimedEventComparator());
-                    while(!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
+                    while (!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
                         internalEventList.remove(0).runEvent();
                     }
                 }
@@ -92,13 +96,62 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         };
     }
 
+    public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception{
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                if (!cash.haveCarInQueue()) {
+                    createStartServiceEvent(fedamb.federateTime + fedamb.federateLookahead);
+                }
+                cash.addCarToQueue(carID);
+                createUpdateCashInstanceEvent(fedamb.federateTime + fedamb.federateLookahead);
+            }
+        };
+    }
+
+    protected void createUpdateCashInstanceEvent(double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateCashAttributes(cash, time);
+            }
+        });
+    }
+
+    protected void createStartServiceEvent(double time) {
+        Random rand = new Random();
+        int carID = cash.getCarIDFromQueue();
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                sendCashServiceStartInteraction(carID, time);
+                updateCashAttributes(cash, time);
+            }
+        });
+        createFinishServiceEvent(carID, time + rand.nextInt(15) + 5);
+    }
+
+    protected void createFinishServiceEvent(int carID, double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                sendCashServiceFinishInteraction(carID, time);
+                if (cash.haveCarInQueue()) {
+                    createStartServiceEvent(time + fedamb.federateLookahead);
+                }
+            }
+        });
+    }
+
     private void updateCarInstance(AttributeHandleValueMap theAttributes) {
         int carID = theAttributes.getValueReference(this.carID).getInt();
         boolean payForWash = theAttributes.getValueReference(this.payForWash).getInt() == 1;
 
-        log("Updated Car Instance: carID=" + carID + ", payForWash=" + payForWash);
-
         cash.updateCarFOMInstance(carID, payForWash);
+
+        log("Updated Car Instance: carID=" + carID + ", payForWash=" + payForWash);
     }
 
     private void updateCashAttributes(Cash cash, double time) throws RTIexception {
@@ -108,7 +161,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         HLAfloat64Time theTime = timeFactory.makeTime(time);
         rtiamb.updateAttributeValues(cash.cashInstanceHandle, attributes, generateTag(), theTime);
 
-        log("Updated Cash Attributes: time=" + theTime.toString());
+        log("Updated Cash Attributes: " + cash.toString() + ", time=" + theTime.toString());
     }
 
     private void sendCashServiceStartInteraction(int carID, double time) throws RTIexception {
@@ -136,8 +189,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     }
 
     @Override
-    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
-        // OBJECTS //
+    protected void publishAndSubscribe() throws RTIexception {        // OBJECTS //
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
 
         cashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Cash");
@@ -159,9 +211,11 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         // INTERACTIONS //
         cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
         cashServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceFinish");
+        wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
 
         rtiamb.publishInteractionClass(cashServiceStart);
         rtiamb.publishInteractionClass(cashServiceFinish);
+        rtiamb.subscribeInteractionClass(wantToPay);
     }
 
     @Override

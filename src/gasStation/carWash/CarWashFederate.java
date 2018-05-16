@@ -1,14 +1,15 @@
 package gasStation.carWash;
 
 import gasStation.DefaultFederate;
+import gasStation.Event;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.*;
+import hla.rti1516e.time.HLAfloat64Time;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.Random;
 
 /**
  * Created by Michał on 2018-05-11.
@@ -16,11 +17,13 @@ import java.net.URL;
 public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> {
 
     protected CarWash carWash;
+
     protected ObjectClassHandle carWashClassHandle;
     protected AttributeHandle queueSize;
-    protected AttributeHandle isFree;
+    protected AttributeHandle currentServiceCarID;
+
     protected ObjectClassHandle carClassHandle;
-    protected AttributeHandle carId;
+    protected AttributeHandle carID;
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
 
@@ -39,41 +42,89 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
 
     }
 
+    public Event createUpdateCarInstanceEvent(AttributeHandleValueMap theAttributes) {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateCarInstance(theAttributes);
+                if (carWash.haveCarInQueue() && carWash.getCurrentServiceCarID() == -1) {
+                    createUpdateCarWashInstanceEvent(fedamb.federateTime + fedamb.federateLookahead);
+                }
+            }
+        };
+    }
+
+    protected void createUpdateCarWashInstanceEvent(double time) {
+        Random rand = new Random();
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                carWash.setCurrentServiceCarID(carWash.getCar());
+                updateCarWashAttributes(carWash, time);
+                if (carWash.haveCarInQueue()) {
+                    createUpdateCarWashInstanceEvent(time + rand.nextInt(10) + 5);
+                }
+            }
+        });
+    }
+
+    private void updateCarInstance(AttributeHandleValueMap theAttributes) {
+        int carID = theAttributes.getValueReference(this.carID).getInt();
+        boolean wantWash = theAttributes.getValueReference(this.wantWash).getInt() == 1;
+
+        if (wantWash) {
+            carWash.addCarToQueue(carID);
+        }
+
+        log("Updated Car Instance: carID=" + carID + ", wantWash=" + wantWash);
+    }
+
+    private void updateCarWashAttributes(CarWash carWash, double time) throws RTIexception {
+        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
+        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(carWash.getQueueSize()).toByteArray());
+        attributes.put(currentServiceCarID, encoderFactory.createHLAinteger32BE(carWash.getCurrentServiceCarID()).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.updateAttributeValues(carWash.getCarWashInstanceHandle(), attributes, generateTag(), theTime);
+
+        log("Updated CarWash Attributes: " + carWash.toString() + ", time=" + theTime.toString());
+    }
+
     @Override
-    protected void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined {
+    protected void publishAndSubscribe() throws RTIexception {
         // OBJECTS //
         carWashClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.CarWash");
         queueSize = rtiamb.getAttributeHandle(carWashClassHandle, "QueueSize");
-        isFree = rtiamb.getAttributeHandle(carWashClassHandle, "IsFree");
+        currentServiceCarID = rtiamb.getAttributeHandle(carWashClassHandle, "CurrentServiceCarID");
 
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
         attributes.add(queueSize);
-        attributes.add(isFree);
+        attributes.add(currentServiceCarID);
 
         rtiamb.publishObjectClassAttributes(carWashClassHandle, attributes);
 
         attributes.clear();
 
         carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
-        carId = rtiamb.getAttributeHandle(carClassHandle, "CarID");
+        carID = rtiamb.getAttributeHandle(carClassHandle, "CarID");
         wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
         payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
         rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
     }
 
     @Override
-    protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
+    protected void registerObjects() throws RTIexception {
         carWash.carWashInstanceHandle = rtiamb.registerObjectInstance(carWashClassHandle);
         log("Registered Object, handle=" + carWash.carWashInstanceHandle);
     }
 
     @Override
-    protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
-            rtiamb.deleteObjectInstance(carWash.carWashInstanceHandle, generateTag());
+    protected void deleteObjects() throws RTIexception {
+        rtiamb.deleteObjectInstance(carWash.carWashInstanceHandle, generateTag());
     }
 
     @Override
-    protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
+    protected void enableTimePolicy() throws RTIexception {
         enableTimeRegulation();
         enableTimeConstrained();
     }
