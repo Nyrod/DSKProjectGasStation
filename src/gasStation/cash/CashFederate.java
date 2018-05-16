@@ -4,7 +4,6 @@ import gasStation.DefaultFederate;
 import gasStation.Event;
 import gasStation.TimedEventComparator;
 import hla.rti1516e.*;
-import hla.rti1516e.encoding.ByteWrapper;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
@@ -41,7 +40,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
 
         while (true) {
             if (!fedamb.externalEventList.isEmpty()) {
-                for (int i = fedamb.externalEventList.size() - 1; i >= 0; i++) {
+                for (int i = fedamb.externalEventList.size() - 1; i >= 0; --i) {
                     fedamb.externalEventList.remove(i).runEvent();
                 }
             }
@@ -152,6 +151,9 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         carID = rtiamb.getAttributeHandle(carClassHandle, "CarID");
         wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
         payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
+        attributes.add(carID);
+        attributes.add(wantWash);
+        attributes.add(payForWash);
         rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
 
         // INTERACTIONS //

@@ -14,10 +14,26 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
     }
 
     @Override
-    public void reflectAttributeValues(ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReflectInfo reflectInfo) throws FederateInternalError {
+    public void reflectAttributeValues(ObjectInstanceHandle theObject,
+                                       AttributeHandleValueMap theAttributes,
+                                       byte[] userSuppliedTag,
+                                       OrderType sentOrdering,
+                                       TransportationTypeHandle theTransport,
+                                       LogicalTime theTime,
+                                       OrderType receivedOrdering,
+                                       SupplementalReflectInfo reflectInfo) throws FederateInternalError {
         externalEventList.add(federate.createUpdateCarInstanceEvent(theAttributes));
         log("Updated object");
     }
+
+//    ObjectInstanceHandle theObject,
+//    AttributeHandleValueMap theAttributes,
+//    byte[] tag,
+//    OrderType sentOrdering,
+//    TransportationTypeHandle theTransport,
+//    LogicalTime time,
+//    OrderType receivedOrdering,
+//    SupplementalReflectInfo reflectInfo
 
     @Override
     protected void log(String message) {
