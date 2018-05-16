@@ -11,15 +11,22 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class DefaultFederate<FederateAmbassador extends DefaultFederateAmbassador> {
 
     public static final String READY_TO_RUN = "ReadyToRun";
+    protected List<Event> internalEventList;
 
     protected RTIambassador rtiamb;
     protected FederateAmbassador fedamb;
     protected HLAfloat64TimeFactory timeFactory;
     protected EncoderFactory encoderFactory;
+
+    public DefaultFederate() {
+        this.internalEventList = new ArrayList<>();
+    }
 
     protected void log(String message) {
         System.out.println("DefaultFederate   : " + message);
@@ -40,13 +47,13 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
 
     protected abstract void mainSimulationLoop() throws RTIexception;
 
-    protected abstract void publishAndSubscribe() throws NameNotFound, NotConnected, RTIinternalError, FederateNotExecutionMember, InvalidObjectClassHandle, AttributeNotDefined, ObjectClassNotDefined, RestoreInProgress, SaveInProgress, InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM;
+    protected abstract void publishAndSubscribe() throws RTIexception;
 
-    protected abstract void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected;
+    protected abstract void registerObjects() throws RTIexception;
 
-    protected abstract void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected;
+    protected abstract void deleteObjects() throws RTIexception;
 
-    protected abstract void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled;
+    protected abstract void enableTimePolicy() throws RTIexception;
 
     public void runFederate(String federateName) throws Exception {
         //////////////////////////////////////////

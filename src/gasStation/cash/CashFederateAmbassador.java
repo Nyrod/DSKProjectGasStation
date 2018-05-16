@@ -1,8 +1,7 @@
 package gasStation.cash;
 
 import gasStation.DefaultFederateAmbassador;
-import hla.rti1516e.ObjectClassHandle;
-import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.*;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 /**
@@ -15,10 +14,9 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
     }
 
     @Override
-    public void discoverObjectInstance(ObjectInstanceHandle theObject, ObjectClassHandle theObjectClass, String objectName) throws FederateInternalError {
-        super.discoverObjectInstance(theObject, theObjectClass, objectName);
-        if (theObjectClass.equals(federate.carClassHandle))
-            federate.addDiscoverCarInstance(theObject);
+    public void reflectAttributeValues(ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReflectInfo reflectInfo) throws FederateInternalError {
+        externalEventList.add(federate.createUpdateCarInstanceEvent(theAttributes));
+        log("Updated object");
     }
 
     @Override

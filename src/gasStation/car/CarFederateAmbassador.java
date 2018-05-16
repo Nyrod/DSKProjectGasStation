@@ -80,7 +80,7 @@ public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate
         log.append(" {DistributorServiceFinish}");
         logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
         try {
-            federate.addUpdateCarAttributeInternalEvent();
+            federate.addUpdateCarAttributeInternalEvent(0);
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }

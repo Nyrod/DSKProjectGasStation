@@ -25,6 +25,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     protected AttributeHandle payForWash;
 
     public CarWashFederate() {
+        super();
         this.carWash = new CarWash();
     }
 

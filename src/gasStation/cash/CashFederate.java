@@ -1,14 +1,12 @@
 package gasStation.cash;
 
 import gasStation.DefaultFederate;
-import gasStation.car.Car;
+import gasStation.Event;
+import gasStation.TimedEventComparator;
 import hla.rti1516e.*;
+import hla.rti1516e.encoding.ByteWrapper;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Created by Michał on 2018-05-11.
@@ -21,11 +19,12 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle cashServiceFinish;
     protected ObjectClassHandle carClassHandle;
-    protected AttributeHandle carId;
+    protected AttributeHandle carID;
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
 
     public CashFederate() {
+        super();
         this.cash = new Cash();
     }
 
@@ -35,12 +34,72 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     }
 
     @Override
-    protected void mainSimulationLoop() {
+    protected void mainSimulationLoop() throws RTIexception {
+        boolean isAdvancing = false;
+        double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+        HLAfloat64Time nextEventTime;
 
+        while (true) {
+            if (!fedamb.externalEventList.isEmpty()) {
+                for (int i = fedamb.externalEventList.size() - 1; i >= 0; i++) {
+                    fedamb.externalEventList.remove(i).runEvent();
+                }
+            }
+
+            if(!isAdvancing) {
+                if (!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    nextEventTime = internalEventList.get(0).getTime();
+                    timeToAdvance = nextEventTime.getValue();
+                    if(nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
+                        advanceTime(nextEventTime);
+                    } else {
+                        timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                        nextEventTime = timeFactory.makeTime(timeToAdvance);
+                        advanceTime(nextEventTime);
+                    }
+
+                } else {
+                    timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                    nextEventTime = timeFactory.makeTime(timeToAdvance);
+                    advanceTime(nextEventTime);
+                }
+                isAdvancing = true;
+            }
+
+            if (fedamb.grantedTime == timeToAdvance) {
+                fedamb.federateTime = timeToAdvance;
+                log("Time advanced to: " + timeToAdvance);
+
+                if(!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    while(!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
+                        internalEventList.remove(0).runEvent();
+                    }
+                }
+
+                isAdvancing = false;
+            }
+            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+        }
     }
 
-    public void addDiscoverCarInstance(ObjectInstanceHandle objectInstance) {
-        
+    public Event createUpdateCarInstanceEvent(AttributeHandleValueMap theAttributes) {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateCarInstance(theAttributes);
+            }
+        };
+    }
+
+    private void updateCarInstance(AttributeHandleValueMap theAttributes) {
+        int carID = theAttributes.getValueReference(this.carID).getInt();
+        boolean payForWash = theAttributes.getValueReference(this.payForWash).getInt() == 1;
+
+        log("Updated Car Instance: carID=" + carID + ", payForWash=" + payForWash);
+
+        cash.updateCarFOMInstance(carID, payForWash);
     }
 
     private void updateCashAttributes(Cash cash, double time) throws RTIexception {
@@ -65,7 +124,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         log("Interaction Send: handle=" + cashServiceStart + " {CashServiceStart}, time=" + theTime.toString());
     }
 
-    private void sendCashServiceFinishInteraction(int carID, double time) throws RTIexception{
+    private void sendCashServiceFinishInteraction(int carID, double time) throws RTIexception {
         ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(1);
 
         ParameterHandle parameterHandle = rtiamb.getParameterHandle(cashServiceFinish, "CarID");
@@ -90,7 +149,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         attributes.clear();
 
         carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
-        carId = rtiamb.getAttributeHandle(carClassHandle, "CarID");
+        carID = rtiamb.getAttributeHandle(carClassHandle, "CarID");
         wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
         payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
         rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);

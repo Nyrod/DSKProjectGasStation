@@ -15,7 +15,6 @@ import java.util.Random;
 public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
     protected List<Car> carList;
-    private List<Event> internalEventList;
 
     protected ObjectClassHandle carHandle;
     protected AttributeHandle carID;
@@ -34,8 +33,8 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected InteractionClassHandle cashServiceFinish;
 
     public CarFederate() {
+        super();
         this.carList = new ArrayList<>();
-        this.internalEventList = new ArrayList<>();
     }
 
     @Override
@@ -46,40 +45,88 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     @Override
     protected void mainSimulationLoop() throws RTIexception {
         createChooseDistributorInternalEvent();
-        while (true) {
-            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-            HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
-
-
-
-            if(!fedamb.externalEventList.isEmpty()) {
-                fedamb.externalEventList.remove(0).runEvent();
-            }
-
-            if (!internalEventList.isEmpty()) {
-                internalEventList.sort(new TimedEventComparator());
-                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
-                if (fedamb.federateTime <= nextEventTime.getValue()) {
-                    internalEventList.remove(0).runEvent();
-                    advanceTime(nextEventTime);
-                    fedamb.federateTime = nextEventTime.getValue();
-                } else {
-                    internalEventList.remove(0);
-                }
-            } else {
-                advanceTime(nextEventTime);
-            }
-            //            if(!internalEventList.isEmpty())
-            //{
+//        while (true) {
+//            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+//            HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
+//
+//
+//            if (!fedamb.externalEventList.isEmpty()) {
+//                for(int i = fedamb.externalEventList.size() - 1; i >= 0; i++) {
+//                    fedamb.externalEventList.remove(i).runEvent();
+//                }
+//            }
+//
+//            if (!internalEventList.isEmpty()) {
 //                internalEventList.sort(new TimedEventComparator());
 //                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
-//                internalEventList.remove(0).runEvent();
+//                if (fedamb.federateTime <= nextEventTime.getValue()) {
+//                    internalEventList.remove(0).runEvent();
+//                    advanceTime(nextEventTime);
+//                    fedamb.federateTime = nextEventTime.getValue();
+//                } else {
+//                    internalEventList.remove(0);
+//                }
+//            } else {
 //                advanceTime(nextEventTime);
 //            }
+//            //            if(!internalEventList.isEmpty())
+//            //{
+////                internalEventList.sort(new TimedEventComparator());
+////                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
+////                internalEventList.remove(0).runEvent();
+////                advanceTime(nextEventTime);
+////            }
+//
+//            if (fedamb.grantedTime == timeToAdvance) {
+//                fedamb.federateTime = timeToAdvance;
+//                log("Time advanced to: " + timeToAdvance);
+//            }
+//            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+//        }
+        boolean isAdvancing = false;
+        double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+        HLAfloat64Time nextEventTime;
+
+        while (true) {
+            if (!fedamb.externalEventList.isEmpty()) {
+                for (int i = fedamb.externalEventList.size() - 1; i >= 0; i++) {
+                    fedamb.externalEventList.remove(i).runEvent();
+                }
+            }
+
+            if(!isAdvancing) {
+                if (!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    nextEventTime = internalEventList.get(0).getTime();
+                    timeToAdvance = nextEventTime.getValue();
+                    if(nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
+                        advanceTime(nextEventTime);
+                    } else {
+                        timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                        nextEventTime = timeFactory.makeTime(timeToAdvance);
+                        advanceTime(nextEventTime);
+                    }
+
+                } else {
+                    timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                    nextEventTime = timeFactory.makeTime(timeToAdvance);
+                    advanceTime(nextEventTime);
+                }
+                isAdvancing = true;
+            }
 
             if (fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
                 log("Time advanced to: " + timeToAdvance);
+
+                if(!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    while(!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
+                        internalEventList.remove(0).runEvent();
+                    }
+                }
+
+                isAdvancing = false;
             }
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
@@ -128,25 +175,27 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     @Override
-    protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
+    protected void registerObjects() throws RTIexception {
         carList = new ArrayList<>();
         for (int i = 0; i < Car.CARS_IN_SIMULATION; i++) {
             Car carToAdd = Car.createCar();
             carToAdd.setObjectHandle(rtiamb.registerObjectInstance(carHandle));
             carList.add(carToAdd);
+            addUpdateCarAttributeInternalEvent(carToAdd.getCarID());
             log("Registered Object, handle=" + carToAdd.getObjectHandle());
+            log(carToAdd.toString());
         }
     }
 
     @Override
-    protected void deleteObjects() throws ObjectInstanceNotKnown, RestoreInProgress, DeletePrivilegeNotHeld, SaveInProgress, FederateNotExecutionMember, RTIinternalError, NotConnected {
+    protected void deleteObjects() throws RTIexception {
         for (int i = Car.CARS_IN_SIMULATION - 1; i >= 0; i--) {
             rtiamb.deleteObjectInstance(carList.remove(i).getObjectHandle(), generateTag());
         }
     }
 
     @Override
-    protected void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled {
+    protected void enableTimePolicy() throws RTIexception {
         enableTimeRegulation();
         enableTimeConstrained();
     }
@@ -170,12 +219,12 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         }
     }
 
-    public void addUpdateCarAttributeInternalEvent() throws RTIexception {
+    public void addUpdateCarAttributeInternalEvent(int carID) throws RTIexception {
         double time = fedamb.federateTime + fedamb.federateLookahead;
         internalEventList.add(new Event(timeFactory.makeTime(time)) {
             @Override
             public void runEvent() throws RTIexception {
-                updateCarAttributes(carList.get(0), time);
+                updateCarAttributes(carList.get(carID), time);
             }
         });
     }
@@ -214,7 +263,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         attributes.put(payForWash, encoderFactory.createHLAboolean(car.isWantWash()).toByteArray());
 
         HLAfloat64Time theTime = timeFactory.makeTime(time + 1);
-        log("Updated Car Attributes: time=" + theTime.toString());
+        log("Updated Car Attributes: " + car.toString() + "   time=" + theTime.toString());
         rtiamb.updateAttributeValues(car.getObjectHandle(), attributes, generateTag(), theTime);
     }
 
