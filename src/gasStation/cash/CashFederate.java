@@ -1,11 +1,10 @@
 package gasStation.cash;
 
 import gasStation.DefaultFederate;
-import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.ObjectClassHandle;
+import gasStation.car.Car;
+import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
+import hla.rti1516e.time.HLAfloat64Time;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -16,7 +15,7 @@ import java.net.URL;
  */
 public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
 
-    protected Cash cash;
+    public Cash cash;
     protected ObjectClassHandle cashClassHandle;
     protected AttributeHandle queueSize;
     protected InteractionClassHandle cashServiceStart;
@@ -38,6 +37,44 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     @Override
     protected void mainSimulationLoop() {
 
+    }
+
+    public void addDiscoverCarInstance(ObjectInstanceHandle objectInstance) {
+        
+    }
+
+    private void updateCashAttributes(Cash cash, double time) throws RTIexception {
+        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
+        attributes.put(queueSize, encoderFactory.createHLAinteger32BE(cash.getQueueSize()).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.updateAttributeValues(cash.cashInstanceHandle, attributes, generateTag(), theTime);
+
+        log("Updated Cash Attributes: time=" + theTime.toString());
+    }
+
+    private void sendCashServiceStartInteraction(int carID, double time) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(1);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(cashServiceStart, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.sendInteraction(cashServiceStart, parameters, generateTag(), theTime);
+
+        log("Interaction Send: handle=" + cashServiceStart + " {CashServiceStart}, time=" + theTime.toString());
+    }
+
+    private void sendCashServiceFinishInteraction(int carID, double time) throws RTIexception{
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(1);
+
+        ParameterHandle parameterHandle = rtiamb.getParameterHandle(cashServiceFinish, "CarID");
+        parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        rtiamb.sendInteraction(cashServiceFinish, parameters, generateTag(), theTime);
+
+        log("Interaction Send: handle=" + cashServiceFinish + " {CashServiceFinish}, time=" + theTime.toString());
     }
 
     @Override
@@ -90,7 +127,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
 
     public static void main(String[] args) {
         try {
-            new CashFederate().runFederate("CashFederate", "CashFederateType");
+            new CashFederate().runFederate("CashFederate");
         } catch (Exception rtie) {
             rtie.printStackTrace();
         }

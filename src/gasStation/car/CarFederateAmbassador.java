@@ -67,7 +67,7 @@ public class CarFederateAmbassador extends DefaultFederateAmbassador<CarFederate
 
     private void reflectDistributor(StringBuilder log, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
         log.append(" {DistributorObject");
-        logReflecteObject(log, tag, time, theAttributes);
+        logReflectObject(log, tag, time, theAttributes);
     }
 
 

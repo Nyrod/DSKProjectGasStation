@@ -49,7 +49,12 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         while (true) {
             double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
             HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
-            advanceTime(nextEventTime);
+
+
+
+            if(!fedamb.externalEventList.isEmpty()) {
+                fedamb.externalEventList.remove(0).runEvent();
+            }
 
             if (!internalEventList.isEmpty()) {
                 internalEventList.sort(new TimedEventComparator());
@@ -61,8 +66,11 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
                 } else {
                     internalEventList.remove(0);
                 }
+            } else {
+                advanceTime(nextEventTime);
             }
-//            if(!internalEventList.isEmpty()) {
+            //            if(!internalEventList.isEmpty())
+            //{
 //                internalEventList.sort(new TimedEventComparator());
 //                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
 //                internalEventList.remove(0).runEvent();
@@ -210,10 +218,9 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         rtiamb.updateAttributeValues(car.getObjectHandle(), attributes, generateTag(), theTime);
     }
 
-
     public static void main(String[] args) {
         try {
-            new CarFederate().runFederate("CarFederate", "CarFederateType");
+            new CarFederate().runFederate("CarFederate");
         } catch (Exception rtie) {
             rtie.printStackTrace();
         }

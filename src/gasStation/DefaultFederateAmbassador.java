@@ -4,6 +4,11 @@ import hla.rti1516e.*;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.time.HLAfloat64Time;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends NullFederateAmbassador {
 
     protected Federate federate;
@@ -19,12 +24,24 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
     protected boolean isAnnounced = false;
     protected boolean isReadyToRun = false;
 
+    protected Map<ObjectInstanceHandle, ObjectClassHandle> externalObjectInstanceMap;
+    public List<Event> externalEventList;
+
     public DefaultFederateAmbassador(Federate federate) {
         this.federate = federate;
+        externalObjectInstanceMap = new HashMap<>();
+        externalEventList = new ArrayList<>();
     }
 
     protected void log(String message) {
         System.out.println("DefaultFederateAmbassador: " + message);
+    }
+
+
+    @Override
+    public void discoverObjectInstance(ObjectInstanceHandle theObject, ObjectClassHandle theObjectClass, String objectName) throws FederateInternalError {
+        log("Discover Object Instance: ObjectClassHandle=" + theObjectClass + " , ObjectInstanceHandle=" + theObject + ", ObjectName=" + objectName);
+        externalObjectInstanceMap.putIfAbsent(theObject, theObjectClass);
     }
 
     @Override
@@ -89,7 +106,7 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
         log(log.toString());
     }
 
-    protected void logReflecteObject(StringBuilder builder, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
+    protected void logReflectObject(StringBuilder builder, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
         builder.append(", tag=" + new String(tag));
         if (time != null) {
             builder.append(", time=" + ((HLAfloat64Time) time).getValue());

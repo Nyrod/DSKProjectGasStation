@@ -48,7 +48,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
 
     protected abstract void enableTimePolicy() throws SaveInProgress, TimeConstrainedAlreadyEnabled, RestoreInProgress, NotConnected, CallNotAllowedFromWithinCallback, InTimeAdvancingState, RequestForTimeConstrainedPending, FederateNotExecutionMember, RTIinternalError, RequestForTimeRegulationPending, InvalidLookahead, TimeRegulationAlreadyEnabled;
 
-    public void runFederate(String federateName, String federateType) throws Exception {
+    public void runFederate(String federateName) throws Exception {
         //////////////////////////////////////////
         // create the RTIambassador and Connect //
         //////////////////////////////////////////

@@ -8,6 +8,7 @@ public class Car {
 
     public static final int CARS_IN_SIMULATION = 3;
     private int carID;
+    private CAR_STATUS carStatus;
     private String type;
     private boolean wantWash;
 
@@ -21,7 +22,8 @@ public class Car {
         this.objectHandle = objectHandle;
     }
 
-    public Car(String type, boolean wantWash) {
+    private Car(String type, boolean wantWash) {
+        this.carStatus = CAR_STATUS.ENTER_GAS_STATION;
         this.type = type;
         this.wantWash = wantWash;
     }
@@ -51,5 +53,30 @@ public class Car {
 
     public int getCarID() {
         return carID;
+    }
+
+    public void setCarStatus(CAR_STATUS carStatus) {
+        this.carStatus = carStatus;
+    }
+
+    @Override
+    public String toString() {
+        return "Car{" +
+                "carID=" + carID +
+                ", carStatus=" + carStatus +
+                ", type='" + type + '\'' +
+                ", wantWash=" + wantWash +
+                '}';
+    }
+
+    private enum CAR_STATUS {
+        ENTER_GAS_STATION,
+        QUEUE_TO_DISTRIBUTOR,
+        DISTRIBUTOR_SERVICE,
+        QUEUE_TO_CASH,
+        CASH_SERVICE,
+        QUEUE_TO_CAR_WASH,
+        CAR_WASH_SERVICE,
+        LEFT_GAS_STATION
     }
 }

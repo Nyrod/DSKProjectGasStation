@@ -11,5 +11,12 @@ import java.util.ArrayList;
 public class CarWash {
 
     protected ObjectInstanceHandle carWashInstanceHandle;
-    protected ArrayList<Car> cars;
+    protected ArrayList<Car> carsQueue;
+    protected boolean isFree;
+
+    public CarWash() {
+        isFree = true;
+        carsQueue = new ArrayList<>();
+    }
+
 }

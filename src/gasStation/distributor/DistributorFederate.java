@@ -198,7 +198,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
 
     public static void main(String[] args) {
         try {
-            new DistributorFederate().runFederate("DistributorFederate", "DistributorFederateType");
+            new DistributorFederate().runFederate("DistributorFederate");
         } catch (Exception rtie) {
             rtie.printStackTrace();
         }

@@ -116,7 +116,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
 
     public static void main(String[] args) {
         try {
-            new StatisticsFederate().runFederate("StatisticsFederate", "StatisticsFederateType");
+            new StatisticsFederate().runFederate("StatisticsFederate");
         } catch (Exception rtie) {
             rtie.printStackTrace();
         }
