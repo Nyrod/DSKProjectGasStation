@@ -38,7 +38,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     }
 
     @Override
-    protected void mainSimulationLoop() {
+    protected void beforeSimulationLoop() {
 
     }
 

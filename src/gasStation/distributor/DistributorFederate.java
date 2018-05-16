@@ -37,33 +37,8 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     }
 
     @Override
-    protected void mainSimulationLoop() throws RTIexception {
-        while (true) {
-            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-            HLAfloat64Time nextEventTime = timeFactory.makeTime(timeToAdvance);
-            advanceTime(nextEventTime);
+    protected void beforeSimulationLoop() throws RTIexception {
 
-            if (!internalEventList.isEmpty()) {
-                internalEventList.sort(new TimedEventComparator());
-                nextEventTime = internalEventList.get(0).getTime().add(timeFactory.makeInterval(1));
-//                if((nextEventTime.getValue() - fedamb.federateTime) > fedamb.federateLookahead) {
-//                    advanceTime(timeFactory.makeTime(fedamb.federateTime + 2*fedamb.federateLookahead));
-//                }
-                if (fedamb.federateTime <= nextEventTime.getValue()) {
-                    internalEventList.remove(0).runEvent();
-                    advanceTime(nextEventTime);
-                    fedamb.federateTime = nextEventTime.getValue();
-                } else {
-                    internalEventList.remove(0);
-                }
-            }
-
-            if (fedamb.grantedTime == timeToAdvance) {
-                fedamb.federateTime = timeToAdvance;
-                log("Time advanced to: " + timeToAdvance);
-            }
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
-        }
     }
 
     public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception{

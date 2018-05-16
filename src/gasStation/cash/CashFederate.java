@@ -37,54 +37,8 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     }
 
     @Override
-    protected void mainSimulationLoop() throws RTIexception {
-        boolean isAdvancing = false;
-        double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-        HLAfloat64Time nextEventTime;
+    protected void beforeSimulationLoop() throws RTIexception {
 
-        while (true) {
-            if (!fedamb.externalEventList.isEmpty()) {
-                for (int i = fedamb.externalEventList.size() - 1; i >= 0; --i) {
-                    fedamb.externalEventList.remove(i).runEvent();
-                }
-            }
-
-            if (!isAdvancing) {
-                if (!internalEventList.isEmpty()) {
-                    internalEventList.sort(new TimedEventComparator());
-                    nextEventTime = internalEventList.get(0).getTime();
-                    timeToAdvance = nextEventTime.getValue();
-                    if (nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
-                        advanceTime(nextEventTime);
-                    } else {
-                        timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-                        nextEventTime = timeFactory.makeTime(timeToAdvance);
-                        advanceTime(nextEventTime);
-                    }
-
-                } else {
-                    timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-                    nextEventTime = timeFactory.makeTime(timeToAdvance);
-                    advanceTime(nextEventTime);
-                }
-                isAdvancing = true;
-            }
-
-            if (fedamb.grantedTime == timeToAdvance) {
-                fedamb.federateTime = timeToAdvance;
-                log("Time advanced to: " + timeToAdvance);
-
-                if (!internalEventList.isEmpty()) {
-                    internalEventList.sort(new TimedEventComparator());
-                    while (!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
-                        internalEventList.remove(0).runEvent();
-                    }
-                }
-
-                isAdvancing = false;
-            }
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
-        }
     }
 
     public Event createUpdateCarInstanceEvent(AttributeHandleValueMap theAttributes) {
@@ -96,7 +50,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         };
     }
 
-    public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception{
+    public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception {
         ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
         int carID = theParameters.getValueReference(carIDParameter).getInt();
         return new Event(timeFactory.makeTime(0.0)) {

@@ -47,17 +47,8 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     }
 
     @Override
-    protected void mainSimulationLoop() throws RTIexception {
-        while (true) {
-            double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
-            HLAfloat64Time time = timeFactory.makeTime(timeToAdvance);
-            advanceTime(time);
+    protected void beforeSimulationLoop() throws RTIexception {
 
-            if(fedamb.grantedTime == timeToAdvance) {
-                fedamb.federateTime = timeToAdvance;
-                log("Time advanced to: " + timeToAdvance);
-            }
-        }
     }
 
     @Override

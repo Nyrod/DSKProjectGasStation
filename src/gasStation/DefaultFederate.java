@@ -4,6 +4,7 @@ import hla.rti1516e.*;
 import hla.rti1516e.encoding.EncoderFactory;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Interval;
+import hla.rti1516e.time.HLAfloat64Time;
 import hla.rti1516e.time.HLAfloat64TimeFactory;
 
 import java.io.BufferedReader;
@@ -45,7 +46,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
 
     protected abstract FederateAmbassador createFederateAmbassador();
 
-    protected abstract void mainSimulationLoop() throws RTIexception;
+    protected abstract void beforeSimulationLoop() throws RTIexception;
 
     protected abstract void publishAndSubscribe() throws RTIexception;
 
@@ -137,6 +138,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         /////////////////////////////////
         // do the main simulation loop //
         /////////////////////////////////
+        beforeSimulationLoop();
         mainSimulationLoop();
 
         //////////////////////////////////
@@ -160,6 +162,56 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
             log("No need to destroy federation, it doesn't exist");
         } catch (FederatesCurrentlyJoined fcj) {
             log("Didn't destroy federation, federates still joined");
+        }
+    }
+
+    protected void mainSimulationLoop() throws RTIexception {
+        boolean isAdvancing = false;
+        double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+        HLAfloat64Time nextEventTime;
+
+        while (true) {
+            if (!fedamb.externalEventList.isEmpty()) {
+                for (int i = fedamb.externalEventList.size() - 1; i >= 0; --i) {
+                    ((Event)fedamb.externalEventList.remove(i)).runEvent();
+                }
+            }
+
+            if (!isAdvancing) {
+                if (!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    nextEventTime = internalEventList.get(0).getTime();
+                    timeToAdvance = nextEventTime.getValue();
+                    if (nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
+                        advanceTime(nextEventTime);
+                    } else {
+                        timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                        nextEventTime = timeFactory.makeTime(timeToAdvance);
+                        advanceTime(nextEventTime);
+                    }
+
+                } else {
+                    timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
+                    nextEventTime = timeFactory.makeTime(timeToAdvance);
+                    advanceTime(nextEventTime);
+                }
+                isAdvancing = true;
+            }
+
+            if (fedamb.grantedTime == timeToAdvance) {
+                fedamb.federateTime = timeToAdvance;
+                log("Time advanced to: " + timeToAdvance);
+
+                if (!internalEventList.isEmpty()) {
+                    internalEventList.sort(new TimedEventComparator());
+                    while (!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
+                        internalEventList.remove(0).runEvent();
+                    }
+                }
+
+                isAdvancing = false;
+            }
+            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
     }
 
