@@ -2,7 +2,6 @@ package gasStation.distributor;
 
 import gasStation.DefaultFederate;
 import gasStation.Event;
-import gasStation.TimedEventComparator;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;

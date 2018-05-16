@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class DefaultFederate<FederateAmbassador extends DefaultFederateAmbassador> {
@@ -172,14 +174,19 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
 
         while (true) {
             if (!fedamb.externalEventList.isEmpty()) {
-                for (int i = fedamb.externalEventList.size() - 1; i >= 0; --i) {
-                    ((Event)fedamb.externalEventList.remove(i)).runEvent();
+                Iterator<Event> iterator = fedamb.externalEventList.iterator();
+                while(iterator.hasNext()) {
+                    Event e = iterator.next();
+                    if(e.getTime().getValue() == fedamb.federateTime) {
+                        e.runEvent();
+                    }
                 }
+                fedamb.externalEventList.clear();
             }
 
             if (!isAdvancing) {
                 if (!internalEventList.isEmpty()) {
-                    internalEventList.sort(new TimedEventComparator());
+                    internalEventList.sort(Comparator.comparing(Event::getTime));
                     nextEventTime = internalEventList.get(0).getTime();
                     timeToAdvance = nextEventTime.getValue();
                     if (nextEventTime.getValue() - fedamb.federateTime <= fedamb.federateLookahead) {
@@ -203,9 +210,13 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
                 log("Time advanced to: " + timeToAdvance);
 
                 if (!internalEventList.isEmpty()) {
-                    internalEventList.sort(new TimedEventComparator());
-                    while (!internalEventList.isEmpty() && internalEventList.get(0).getTime().getValue() == fedamb.federateTime) {
-                        internalEventList.remove(0).runEvent();
+                    Iterator<Event> iterator = internalEventList.iterator();
+                    while(iterator.hasNext()) {
+                        Event e = iterator.next();
+                        if(e.getTime().getValue() == fedamb.federateTime) {
+                            e.runEvent();
+                            internalEventList.remove(e);
+                        }
                     }
                 }
 

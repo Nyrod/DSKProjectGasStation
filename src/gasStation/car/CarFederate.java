@@ -2,14 +2,12 @@ package gasStation.car;
 
 import gasStation.DefaultFederate;
 import gasStation.Event;
-import gasStation.TimedEventComparator;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Interval;
 import hla.rti1516e.time.HLAfloat64Time;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
