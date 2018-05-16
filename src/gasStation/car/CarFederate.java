@@ -181,7 +181,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Interval add = timeFactory.makeInterval(1);
+        HLAfloat64Interval add = timeFactory.makeInterval(fedamb.federateLookahead);
         rtiamb.sendInteraction(chooseDistributor, parameters, generateTag(), time.add(add));
 
         log("Interaction Send: handle=" + chooseDistributor + " {CarChooseDistributor}, time=" + time.toString());
