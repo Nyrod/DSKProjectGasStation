@@ -67,7 +67,7 @@ public class Distributor {
         return "Distributor{" +
                 "distributorID=" + distributorID +
                 ", type='" + type + '\'' +
-                ", queueSize=" + queue.size() +
+                ", distributorQueueSize=" + queue.size() +
                 '}';
     }
 }

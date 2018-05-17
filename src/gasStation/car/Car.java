@@ -12,6 +12,8 @@ public class Car {
     private CAR_STATUS carStatus;
     private String type;
     private boolean wantWash;
+    private boolean payForWash;
+    private boolean internalWantWash;
 
     private ObjectInstanceHandle objectHandle;
 
@@ -23,10 +25,12 @@ public class Car {
         this.objectHandle = objectHandle;
     }
 
-    private Car(String type, boolean wantWash) {
+    private Car(String type, boolean internalWantWash) {
         this.carStatus = CAR_STATUS.ENTER_GAS_STATION;
         this.type = type;
-        this.wantWash = wantWash;
+        this.wantWash = false;
+        this.payForWash = false;
+        this.internalWantWash = internalWantWash;
     }
 
     public static Car createCar() {
@@ -37,7 +41,7 @@ public class Car {
         return car;
     }
 
-    public String getTypeype() {
+    public String getType() {
         return type;
     }
 
@@ -59,6 +63,23 @@ public class Car {
 
     public void setCarStatus(CAR_STATUS carStatus) {
         this.carStatus = carStatus;
+        System.out.println(this.toString());
+    }
+
+    public boolean isInternalWantWash() {
+        return internalWantWash;
+    }
+
+    public void setPayForWash(boolean payForWash) {
+        this.payForWash = payForWash;
+    }
+
+    public boolean isPayForWash() {
+        return payForWash;
+    }
+
+    public boolean ifCarLeftGasStation() {
+        return carStatus.equals(CAR_STATUS.LEFT_GAS_STATION);
     }
 
     @Override
@@ -68,10 +89,12 @@ public class Car {
                 ", carStatus=" + carStatus +
                 ", type='" + type + '\'' +
                 ", wantWash=" + wantWash +
+                ", payForWash=" + payForWash +
+                ", internalWantWash=" + internalWantWash +
                 '}';
     }
 
-    private enum CAR_STATUS {
+    protected enum CAR_STATUS {
         ENTER_GAS_STATION,
         QUEUE_TO_DISTRIBUTOR,
         DISTRIBUTOR_SERVICE,

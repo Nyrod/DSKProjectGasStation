@@ -73,7 +73,7 @@ public class Cash {
     @Override
     public String toString() {
         return "Cash{" +
-                "queueSize=" + queue.size() +
+                "distributorQueueSize=" + queue.size() +
                 '}';
     }
 

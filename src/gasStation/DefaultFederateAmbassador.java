@@ -37,7 +37,6 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
         System.out.println("DefaultFederateAmbassador: " + message);
     }
 
-
     @Override
     public void discoverObjectInstance(ObjectInstanceHandle theObject, ObjectClassHandle theObjectClass, String objectName) throws FederateInternalError {
         log("Discover Object Instance: ObjectClassHandle=" + theObjectClass + " , ObjectInstanceHandle=" + theObject + ", ObjectName=" + objectName);
@@ -120,6 +119,6 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
             theAttributes.getValueReference(attributeHandle);
             builder.append("\n");
         }
-        log(builder.toString());
+        //log(builder.toString());
     }
 }

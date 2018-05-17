@@ -23,17 +23,16 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
     public void receiveInteraction(InteractionClassHandle interactionClass, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
         StringBuilder log = new StringBuilder("Interaction Received:");
         log.append(" handle=" + interactionClass);
-
         if (interactionClass.equals(federate.wantToPay)) {
             receiveCarWantToPay(log, theParameters, userSuppliedTag, theTime);
         }
     }
 
     private void receiveCarWantToPay(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {WantToPay}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
         try {
             externalEventList.add(federate.createAddToQueueCarEvent(theParameters));
+            log.append(" {WantToPay}");
+            logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }

@@ -130,7 +130,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         attributes.put(distributorType, encoderFactory.createHLAunicodeString(distributor.getType()).toByteArray());
         attributes.put(queueSize, encoderFactory.createHLAinteger32BE(distributor.getQueueSize()).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.updateAttributeValues(distributor.getObjectInstanceHandle(), attributes, generateTag(), theTime);
 
         log("Updated Distributor Attributes: " + distributor.toString() + ", time=" + theTime.toString());
@@ -176,6 +176,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
             Distributor distributor = Distributor.getNextDistributor();
             distributor.setObjectInstanceHandle(rtiamb.registerObjectInstance(distributorClassHandle));
             distributorList.add(distributor);
+            createUpdateDistributorInstanceEvent(distributor, fedamb.federateTime + fedamb.federateLookahead);
             log("Registered Object, handle=" + distributor.getObjectInstanceHandle());
         }
     }

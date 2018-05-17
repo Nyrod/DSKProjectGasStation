@@ -22,10 +22,10 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
     }
 
     private void receiveChooseDistributor(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {ChooseDistributor}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
         try {
             externalEventList.add(federate.createAddToQueueCarEvent(theParameters));
+            log.append(" {ChooseDistributor}");
+            logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }

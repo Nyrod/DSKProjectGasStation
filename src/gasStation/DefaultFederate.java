@@ -27,8 +27,11 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
     protected HLAfloat64TimeFactory timeFactory;
     protected EncoderFactory encoderFactory;
 
+    protected boolean isRunning;
+
     public DefaultFederate() {
         this.internalEventList = new ArrayList<>();
+        this.isRunning = true;
     }
 
     protected void log(String message) {
@@ -167,21 +170,22 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         }
     }
 
+    protected void finishSimulation() {
+        this.isRunning = false;
+    }
+
     protected void mainSimulationLoop() throws RTIexception {
         boolean isAdvancing = false;
         double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
         HLAfloat64Time nextEventTime;
 
-        while (true) {
+        while (isRunning) {
             if (!fedamb.externalEventList.isEmpty()) {
                 Iterator<Event> iterator = fedamb.externalEventList.iterator();
                 while(iterator.hasNext()) {
-                    Event e = iterator.next();
-                    if(e.getTime().getValue() == fedamb.federateTime) {
-                        e.runEvent();
-                    }
+                    iterator.next().runEvent();
+                    iterator.remove();
                 }
-                fedamb.externalEventList.clear();
             }
 
             if (!isAdvancing) {
@@ -215,7 +219,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
                         Event e = iterator.next();
                         if(e.getTime().getValue() == fedamb.federateTime) {
                             e.runEvent();
-                            internalEventList.remove(e);
+                            iterator.remove();
                         }
                     }
                 }

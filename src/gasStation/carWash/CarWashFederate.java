@@ -60,7 +60,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
             @Override
             public void runEvent() throws RTIexception {
                 carWash.setCurrentServiceCarID(carWash.getCar());
-                updateCarWashAttributes(carWash, time);
+                updateCarWashAttributes(time);
                 if (carWash.haveCarInQueue()) {
                     createUpdateCarWashInstanceEvent(time + rand.nextInt(10) + 5);
                 }
@@ -79,12 +79,12 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         log("Updated Car Instance: carID=" + carID + ", wantWash=" + wantWash);
     }
 
-    private void updateCarWashAttributes(CarWash carWash, double time) throws RTIexception {
+    private void updateCarWashAttributes(double time) throws RTIexception {
         AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
         attributes.put(queueSize, encoderFactory.createHLAinteger32BE(carWash.getQueueSize()).toByteArray());
         attributes.put(currentServiceCarID, encoderFactory.createHLAinteger32BE(carWash.getCurrentServiceCarID()).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.updateAttributeValues(carWash.getCarWashInstanceHandle(), attributes, generateTag(), theTime);
 
         log("Updated CarWash Attributes: " + carWash.toString() + ", time=" + theTime.toString());
@@ -115,6 +115,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     @Override
     protected void registerObjects() throws RTIexception {
         carWash.carWashInstanceHandle = rtiamb.registerObjectInstance(carWashClassHandle);
+        updateCarWashAttributes(fedamb.federateTime + fedamb.federateLookahead);
         log("Registered Object, handle=" + carWash.carWashInstanceHandle);
     }
 

@@ -111,7 +111,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
         attributes.put(queueSize, encoderFactory.createHLAinteger32BE(cash.getQueueSize()).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.updateAttributeValues(cash.cashInstanceHandle, attributes, generateTag(), theTime);
 
         log("Updated Cash Attributes: " + cash.toString() + ", time=" + theTime.toString());
@@ -174,6 +174,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
     @Override
     protected void registerObjects() throws SaveInProgress, RestoreInProgress, ObjectClassNotPublished, ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError, NotConnected {
         cash.cashInstanceHandle = rtiamb.registerObjectInstance(cashClassHandle);
+        createUpdateCashInstanceEvent(fedamb.federateTime + fedamb.federateLookahead);
         log("Registered Object, handle=" + cash.cashInstanceHandle);
     }
 
