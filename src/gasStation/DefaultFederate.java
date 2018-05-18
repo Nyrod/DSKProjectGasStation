@@ -179,7 +179,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
         HLAfloat64Time nextEventTime;
 
-        while (isRunning) {
+        while (fedamb.federateTime != 120.0) {
             if (!fedamb.externalEventList.isEmpty()) {
                 Iterator<Event> iterator = fedamb.externalEventList.iterator();
                 while(iterator.hasNext()) {
@@ -211,7 +211,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
 
             if (fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
-                log("Time advanced to: " + timeToAdvance);
+                //log("Time advanced to: " + timeToAdvance);
 
                 if (!internalEventList.isEmpty()) {
                     Iterator<Event> iterator = internalEventList.iterator();

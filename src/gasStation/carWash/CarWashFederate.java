@@ -46,12 +46,37 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                updateCarInstance(theAttributes);
-                if (carWash.haveCarInQueue() && carWash.getCurrentServiceCarID() == -1) {
-                    createUpdateCarWashInstanceEvent(fedamb.federateTime + fedamb.federateLookahead);
+                boolean wantWash = updateCarInstance(theAttributes);
+                if(wantWash) {
+                    if (carWash.nextServiceCar == 0 || carWash.nextServiceCar < fedamb.federateTime + fedamb.federateLookahead) {
+                        carWash.nextServiceCar = fedamb.federateTime + fedamb.federateLookahead;
+                    }
+                    createStartServiceEvent(carWash.nextServiceCar);
                 }
             }
         };
+    }
+
+    protected void createStartServiceEvent(double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                carWash.setCurrentServiceCarID(carWash.getCar());
+                updateCarWashAttributes(time);
+            }
+        });
+        carWash.nextServiceCar += 5;
+        createFinishServiceEvent(carWash.nextServiceCar);
+    }
+
+    protected void createFinishServiceEvent(double time) {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                carWash.setCurrentServiceCarID(-1);
+                updateCarWashAttributes(time);
+            }
+        });
     }
 
     protected void createUpdateCarWashInstanceEvent(double time) {
@@ -59,16 +84,16 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         internalEventList.add(new Event(timeFactory.makeTime(time)) {
             @Override
             public void runEvent() throws RTIexception {
-                carWash.setCurrentServiceCarID(carWash.getCar());
-                updateCarWashAttributes(time);
                 if (carWash.haveCarInQueue()) {
                     createUpdateCarWashInstanceEvent(time + rand.nextInt(10) + 5);
                 }
+                carWash.setCurrentServiceCarID(carWash.getCar());
+                updateCarWashAttributes(time);
             }
         });
     }
 
-    private void updateCarInstance(AttributeHandleValueMap theAttributes) {
+    private boolean updateCarInstance(AttributeHandleValueMap theAttributes) {
         int carID = theAttributes.getValueReference(this.carID).getInt();
         boolean wantWash = theAttributes.getValueReference(this.wantWash).getInt() == 1;
 
@@ -77,6 +102,8 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         }
 
         log("Updated Car Instance: carID=" + carID + ", wantWash=" + wantWash);
+
+        return wantWash;
     }
 
     private void updateCarWashAttributes(double time) throws RTIexception {
@@ -103,12 +130,14 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
 
         rtiamb.publishObjectClassAttributes(carWashClassHandle, attributes);
 
-        attributes.clear();
-
         carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
         carID = rtiamb.getAttributeHandle(carClassHandle, "CarID");
         wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
         payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
+        attributes.clear();
+        attributes.add(carID);
+        attributes.add(wantWash);
+        attributes.add(payForWash);
         rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
     }
 

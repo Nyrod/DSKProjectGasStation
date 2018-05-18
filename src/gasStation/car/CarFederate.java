@@ -4,6 +4,8 @@ import gasStation.DefaultFederate;
 import gasStation.Event;
 import hla.rti1516e.*;
 import hla.rti1516e.encoding.ByteWrapper;
+import hla.rti1516e.encoding.DecoderException;
+import hla.rti1516e.encoding.HLAunicodeString;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
@@ -52,7 +54,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     @Override
     protected void beforeSimulationLoop() throws RTIexception {
         Random rand = new Random();
-        double time = rand.nextInt(5) + fedamb.federateLookahead;
+        double time = rand.nextInt(5) + 5;
         for (int i = 0; i < carList.size(); i++) {
             createChooseDistributorEvent(carList.get(i), time);
             time += rand.nextInt(4) + fedamb.federateLookahead;
@@ -179,8 +181,14 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     private void updateDistributorInstance(AttributeHandleValueMap theAttributes) {
+        HLAunicodeString hlaString = encoderFactory.createHLAunicodeString();
+        try {
+            hlaString.decode(theAttributes.getValueReference(this.distributorType));
+        } catch (DecoderException e) {
+            e.printStackTrace();
+        }
+        String distributorType = hlaString.getValue();
         int distributorID = theAttributes.getValueReference(this.distributorID).getInt();
-        String distributorType = new String(theAttributes.getValueReference(this.distributorType).array());
         int queueSize = theAttributes.getValueReference(this.distributorQueueSize).getInt();
 
         DistributorFOM distributorFOM = findDistributorFOMByID(distributorID);
@@ -230,7 +238,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         parameterHandle = rtiamb.getParameterHandle(chooseDistributor, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.sendInteraction(chooseDistributor, parameters, generateTag(), theTime);
 
         log("Interaction Send: handle=" + chooseDistributor + " {CarChooseDistributor}, " + "CarID= " + carID + ", DistributorID= " + distributorID + ", time=" + theTime.toString());
@@ -242,7 +250,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         ParameterHandle parameterHandle = rtiamb.getParameterHandle(wantToPay, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.sendInteraction(wantToPay, parameters, generateTag(), theTime);
 
         log("Interaction Send: handle=" + wantToPay + " {CarWantToPay}, " + "CarID= " + carID + ", time=" + theTime.toString());

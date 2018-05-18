@@ -102,7 +102,7 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
             log.append(" bytes");
             log.append("\n");
         }
-        log(log.toString());
+        //log(log.toString());
     }
 
     protected void logReflectObject(StringBuilder builder, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {

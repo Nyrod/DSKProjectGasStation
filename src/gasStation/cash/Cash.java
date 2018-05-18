@@ -13,10 +13,12 @@ public class Cash {
     protected ObjectInstanceHandle cashInstanceHandle;
     private List<CarFOM> carList;
     private List<CarFOM> queue;
+    private double finishCurrentServiceTime;
 
     public Cash() {
         queue = new ArrayList<>();
         carList = new ArrayList<>();
+        finishCurrentServiceTime = 0.0;
     }
 
     public void addCarToQueue(int carID) {
@@ -36,6 +38,10 @@ public class Cash {
 
     public int getCarIDFromQueue() {
         return queue.remove(0).carID;
+    }
+
+    public int getNextServiceCarIDFromQueue() {
+        return queue.get(0).carID;
     }
 
     public boolean haveCarInQueue() {
@@ -70,10 +76,18 @@ public class Cash {
         return i < carList.size() ? carList.get(i) : null;
     }
 
+    public double getFinishCurrentServiceTime() {
+        return finishCurrentServiceTime;
+    }
+
+    public void setFinishCurrentServiceTime(double finishCurrentServiceTime) {
+        this.finishCurrentServiceTime = finishCurrentServiceTime;
+    }
+
     @Override
     public String toString() {
         return "Cash{" +
-                "distributorQueueSize=" + queue.size() +
+                "cashQueueSize=" + queue.size() +
                 '}';
     }
 

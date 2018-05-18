@@ -13,6 +13,7 @@ public class Distributor {
     private ArrayList<Integer> queue;
     private int distributorID;
     private String type;
+    private double nextServiceTime;
 
     private ObjectInstanceHandle objectInstanceHandle;
 
@@ -22,6 +23,7 @@ public class Distributor {
         this.queue = new ArrayList<>();
         this.distributorID = NEXT_DISTRIBUTOR_ID;
         this.type = rand.nextBoolean() ? "ON" : "GAS";
+        nextServiceTime = 0.0;
 
         NEXT_DISTRIBUTOR_ID++;
     }
@@ -36,6 +38,10 @@ public class Distributor {
 
     public int getCar() {
         return queue.remove(0);
+    }
+
+    public int getNextServiceCar() {
+        return queue.get(0);
     }
 
     public int getQueueSize() {
@@ -60,6 +66,14 @@ public class Distributor {
 
     public int getDistributorID() {
         return distributorID;
+    }
+
+    public double getNextServiceTime() {
+        return nextServiceTime;
+    }
+
+    public void setNextServiceTime(double nextServiceTime) {
+        this.nextServiceTime = nextServiceTime;
     }
 
     @Override

@@ -49,17 +49,19 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         };
     }
 
+
     public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception {
         ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
         int carID = theParameters.getValueReference(carIDParameter).getInt();
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                if (!cash.haveCarInQueue()) {
-                    createStartServiceEvent(fedamb.federateTime + fedamb.federateLookahead);
-                }
                 cash.addCarToQueue(carID);
                 createUpdateCashInstanceEvent(fedamb.federateTime + fedamb.federateLookahead);
+                if(cash.getFinishCurrentServiceTime() == 0 || cash.getFinishCurrentServiceTime() < fedamb.federateTime + fedamb.federateLookahead) {
+                    cash.setFinishCurrentServiceTime(fedamb.federateTime + fedamb.federateLookahead);
+                }
+                createStartServiceEvent(cash.getFinishCurrentServiceTime());
             }
         };
     }
@@ -75,15 +77,17 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
 
     protected void createStartServiceEvent(double time) {
         Random rand = new Random();
-        int carID = cash.getCarIDFromQueue();
+        double finishServiceTime = time + rand.nextInt(15) + 5;
         internalEventList.add(new Event(timeFactory.makeTime(time)) {
             @Override
             public void runEvent() throws RTIexception {
+                int carID = cash.getCarIDFromQueue();
                 sendCashServiceStartInteraction(carID, time);
                 updateCashAttributes(cash, time);
             }
         });
-        createFinishServiceEvent(carID, time + rand.nextInt(15) + 5);
+        cash.setFinishCurrentServiceTime(finishServiceTime);
+        createFinishServiceEvent(cash.getNextServiceCarIDFromQueue(), finishServiceTime);
     }
 
     protected void createFinishServiceEvent(int carID, double time) {
@@ -91,9 +95,6 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
             @Override
             public void runEvent() throws RTIexception {
                 sendCashServiceFinishInteraction(carID, time);
-                if (cash.haveCarInQueue()) {
-                    createStartServiceEvent(time + fedamb.federateLookahead);
-                }
             }
         });
     }
@@ -123,7 +124,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         ParameterHandle parameterHandle = rtiamb.getParameterHandle(cashServiceStart, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time+ fedamb.federateLookahead);
         rtiamb.sendInteraction(cashServiceStart, parameters, generateTag(), theTime);
 
         log("Interaction Send: handle=" + cashServiceStart + " {CashServiceStart}, time=" + theTime.toString());
@@ -135,7 +136,7 @@ public class CashFederate extends DefaultFederate<CashFederateAmbassador> {
         ParameterHandle parameterHandle = rtiamb.getParameterHandle(cashServiceFinish, "CarID");
         parameters.put(parameterHandle, encoderFactory.createHLAinteger32BE(carID).toByteArray());
 
-        HLAfloat64Time theTime = timeFactory.makeTime(time);
+        HLAfloat64Time theTime = timeFactory.makeTime(time+ fedamb.federateLookahead);
         rtiamb.sendInteraction(cashServiceFinish, parameters, generateTag(), theTime);
 
         log("Interaction Send: handle=" + cashServiceFinish + " {CashServiceFinish}, time=" + theTime.toString());

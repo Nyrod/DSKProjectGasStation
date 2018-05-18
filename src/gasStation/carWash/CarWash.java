@@ -14,10 +14,12 @@ public class CarWash {
 
     private List<Integer> queue;
     private int currentServiceCarID;
+    public double nextServiceCar;
 
     public CarWash() {
         this.queue = new ArrayList<>();
         this.currentServiceCarID = -1;
+        nextServiceCar = 0.0;
     }
 
     public void addCarToQueue(int carId) {
@@ -38,6 +40,13 @@ public class CarWash {
         return !queue.isEmpty();
     }
 
+    @Override
+    public String toString() {
+        return "CarWash{" +
+                "queue=" + queue.size() +
+                ", currentServiceCarID=" + currentServiceCarID +
+                '}';
+    }
 
     public int getCurrentServiceCarID() {
         return currentServiceCarID;
