@@ -15,7 +15,7 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
     }
 
     @Override
-    public void reflectAttributeValues(ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes, byte[] userSuppliedTag,  OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReflectInfo reflectInfo) throws FederateInternalError {
+    public void reflectAttributeValues(ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes, byte[] userSuppliedTag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime theTime, OrderType receivedOrdering, SupplementalReflectInfo reflectInfo) throws FederateInternalError {
         externalEventList.add(federate.createUpdateCarInstanceEvent(theAttributes));
     }
 
@@ -25,6 +25,8 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
         log.append(" handle=" + interactionClass);
         if (interactionClass.equals(federate.wantToPay)) {
             receiveCarWantToPay(log, theParameters, userSuppliedTag, theTime);
+        } else if (interactionClass.equals(federate.endSimulation)) {
+            receiveEndSimulation(log, theParameters, userSuppliedTag, theTime);
         }
     }
 
@@ -36,6 +38,14 @@ public class CashFederateAmbassador extends DefaultFederateAmbassador<CashFedera
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }
+    }
+
+    private void receiveEndSimulation(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
+        externalEventList.add(federate.createEndSimulationEvent());
+        log.append(" {EndSimulation}");
+        log(log.toString());
+
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     @Override

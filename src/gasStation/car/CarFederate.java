@@ -25,6 +25,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     protected AttributeHandle payForWash;
     protected InteractionClassHandle chooseDistributor;
     protected InteractionClassHandle wantToPay;
+    protected InteractionClassHandle endSimulation;
 
     protected ObjectClassHandle distributorHandle;
     protected AttributeHandle distributorID;
@@ -61,6 +62,11 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         }
     }
 
+    @Override
+    protected void afterSimulationLoop() throws RTIexception {
+
+    }
+
     public Event createUpdateDistributorInstanceEvent(AttributeHandleValueMap theAttributes) {
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
@@ -71,15 +77,27 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
     }
 
     public Event createUpdateCarWashInstanceEvent(AttributeHandleValueMap theAttributes) {
+        int currentServiceCarID = theAttributes.getValueReference(this.currentServiceCarID).getInt();
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
                 int finishServiceCarID = updateCarWashInstance(theAttributes);
-                if (finishServiceCarID != -1) {
+                if (currentServiceCarID != -1) {
+                    Car car = findCarByID(currentServiceCarID);
+                    car.setCarStatus(Car.CAR_STATUS.CAR_WASH_SERVICE);
+                } else if (currentServiceCarID == -1 && finishServiceCarID != -1) {
                     Car car = findCarByID(finishServiceCarID);
                     car.setCarStatus(Car.CAR_STATUS.QUEUE_TO_CASH);
                     createWantToPayEvent(car.getCarID(), fedamb.federateTime + fedamb.federateLookahead);
                 }
+//                if (finishServiceCarID == -1 ) {
+//                    Car car = findCarByID(finishServiceCarID);
+//                    car.setCarStatus(Car.CAR_STATUS.QUEUE_TO_CASH);
+//                    createWantToPayEvent(car.getCarID(), fedamb.federateTime + fedamb.federateLookahead);
+//                } else {
+//                    Car car = findCarByID(finishServiceCarID);
+//                    car.setCarStatus(Car.CAR_STATUS.CAR_WASH_SERVICE);
+//                }
             }
         };
     }
@@ -138,10 +156,20 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
                     }
                 }
                 if (ifAllCarsLeftGasStation()) {
+                    createEndSimulationEvent(fedamb.federateTime + fedamb.federateLookahead);
                     finishSimulation();
                 }
             }
         };
+    }
+
+    private void createEndSimulationEvent(double time) throws RTIexception {
+        internalEventList.add(new Event(timeFactory.makeTime(time)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                sendInteractionEndSimulation(time);
+            }
+        });
     }
 
     private void createChooseDistributorEvent(Car car, double time) throws RTIexception {
@@ -156,6 +184,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
                         finishSimulation();
                     }
                 } else {
+                    car.setCarStatus(Car.CAR_STATUS.QUEUE_TO_DISTRIBUTOR);
                     sendInteractionChooseDistributor(distributorID, car.getCarID(), time);
                 }
             }
@@ -256,6 +285,15 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         log("Interaction Send: handle=" + wantToPay + " {CarWantToPay}, " + "CarID= " + carID + ", time=" + theTime.toString());
     }
 
+    private void sendInteractionEndSimulation(double time) throws RTIexception {
+        ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(0);
+
+        HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
+        rtiamb.sendInteraction(wantToPay, parameters, generateTag(), theTime);
+
+        log("Interaction Send: handle=" + endSimulation + " {EndSimulation}, time=" + theTime.toString());
+    }
+
     @Override
     protected void publishAndSubscribe() throws RTIexception {
         // OBJECTS //
@@ -290,6 +328,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         // INTERACTIONS //
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
         wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
+        endSimulation = rtiamb.getInteractionClassHandle("HLAinteractionRoot.EndSimulation");
         distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
         cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
@@ -297,6 +336,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
 
         rtiamb.publishInteractionClass(chooseDistributor);
         rtiamb.publishInteractionClass(wantToPay);
+        rtiamb.publishInteractionClass(endSimulation);
         rtiamb.subscribeInteractionClass(distributorServiceStart);
         rtiamb.subscribeInteractionClass(distributorServiceFinish);
         rtiamb.subscribeInteractionClass(cashServiceStart);

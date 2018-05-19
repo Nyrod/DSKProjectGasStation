@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class Car {
 
-    public static final int CARS_IN_SIMULATION = 3;
+    public static final int CARS_IN_SIMULATION = 5;
     public static int NEXT_CAR_ID = 0;
     private int carID;
     private CAR_STATUS carStatus;

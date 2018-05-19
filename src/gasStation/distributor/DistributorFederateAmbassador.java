@@ -16,8 +16,10 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
         StringBuilder log = new StringBuilder("Interaction Received:");
         log.append(" handle=" + interactionClass);
 
-        if(interactionClass.equals(federate.chooseDistributor)) {
+        if (interactionClass.equals(federate.chooseDistributor)) {
             receiveChooseDistributor(log, theParameters, userSuppliedTag, theTime);
+        } else if (interactionClass.equals(federate.endSimulation)) {
+            receiveEndSimulation(log, theParameters, userSuppliedTag, theTime);
         }
     }
 
@@ -29,6 +31,14 @@ public class DistributorFederateAmbassador extends DefaultFederateAmbassador<Dis
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }
+    }
+
+    private void receiveEndSimulation(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
+        externalEventList.add(federate.createEndSimulationEvent());
+        log.append(" {EndSimulation}");
+        log(log.toString());
+
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     @Override

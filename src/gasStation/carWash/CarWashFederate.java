@@ -2,10 +2,7 @@ package gasStation.carWash;
 
 import gasStation.DefaultFederate;
 import gasStation.Event;
-import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.AttributeHandleValueMap;
-import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
@@ -26,6 +23,7 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
     protected AttributeHandle carID;
     protected AttributeHandle wantWash;
     protected AttributeHandle payForWash;
+    protected InteractionClassHandle endSimulation;
 
     public CarWashFederate() {
         super();
@@ -42,17 +40,31 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
 
     }
 
+    @Override
+    protected void afterSimulationLoop() throws RTIexception {
+
+    }
+
     public Event createUpdateCarInstanceEvent(AttributeHandleValueMap theAttributes) {
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
                 boolean wantWash = updateCarInstance(theAttributes);
-                if(wantWash) {
+                if (wantWash) {
                     if (carWash.nextServiceCar == 0 || carWash.nextServiceCar < fedamb.federateTime + fedamb.federateLookahead) {
                         carWash.nextServiceCar = fedamb.federateTime + fedamb.federateLookahead;
                     }
                     createStartServiceEvent(carWash.nextServiceCar);
                 }
+            }
+        };
+    }
+
+    public Event createEndSimulationEvent() {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                finishSimulation();
             }
         };
     }
@@ -139,6 +151,9 @@ public class CarWashFederate extends DefaultFederate<CarWashFederateAmbassador> 
         attributes.add(wantWash);
         attributes.add(payForWash);
         rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
+
+        endSimulation = rtiamb.getInteractionClassHandle("HLAinteractionRoot.EndSimulation");
+        rtiamb.subscribeInteractionClass(endSimulation);
     }
 
     @Override

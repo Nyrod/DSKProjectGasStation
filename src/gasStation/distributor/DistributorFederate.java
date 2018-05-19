@@ -24,6 +24,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     protected InteractionClassHandle distributorServiceFinish;
 
     protected InteractionClassHandle chooseDistributor;
+    protected InteractionClassHandle endSimulation;
 
     public DistributorFederate() {
         super();
@@ -38,6 +39,20 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
     @Override
     protected void beforeSimulationLoop() throws RTIexception {
 
+    }
+
+    @Override
+    protected void afterSimulationLoop() throws RTIexception {
+
+    }
+
+    public Event createEndSimulationEvent() {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                finishSimulation();
+            }
+        };
     }
 
     public Event createAddToQueueCarEvent(ParameterHandleValueMap theParameters) throws RTIexception{
@@ -174,10 +189,12 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         distributorServiceStart = rtiamb.getInteractionClassHandle("InteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("InteractionRoot.DistributorServiceFinish");
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
+        endSimulation = rtiamb.getInteractionClassHandle("HLAinteractionRoot.EndSimulation");
 
         rtiamb.publishInteractionClass(distributorServiceStart);
         rtiamb.publishInteractionClass(distributorServiceFinish);
 
+        rtiamb.subscribeInteractionClass(endSimulation);
         rtiamb.subscribeInteractionClass(chooseDistributor);
     }
 

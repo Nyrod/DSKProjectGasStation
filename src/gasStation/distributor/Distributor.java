@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class Distributor {
 
-    public static int DISTRIBUTORS_IN_SIMULATION = 5;
+    public static int DISTRIBUTORS_IN_SIMULATION = 3;
     private static int NEXT_DISTRIBUTOR_ID = 0;
 
     private ArrayList<Integer> queue;

@@ -65,6 +65,12 @@
                     <dataType>HLAinteger32BE</dataType>
                 </parameter>
             </interactionClass>
+            <interactionClass>
+                <name>EndSimulation</name>
+                <sharing>PublishSubscribe</sharing>
+                <transportation>HLAreliable</transportation>
+                <order>TimeStamp</order>
+            </interactionClass>
         </interactionClass>
     </interactions>
 </objectModel>

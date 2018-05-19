@@ -1,10 +1,8 @@
 package gasStation.statistics;
 
 import gasStation.DefaultFederate;
-import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.ObjectClassHandle;
+import gasStation.Event;
+import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 import hla.rti1516e.time.HLAfloat64Time;
 
@@ -14,6 +12,11 @@ import hla.rti1516e.time.HLAfloat64Time;
 public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbassador> {
 
     protected Statistics statistics;
+    // obiekt car
+    protected ObjectClassHandle carClassHandle;
+    protected AttributeHandle carID;
+    protected AttributeHandle wantWash;
+    protected AttributeHandle payForWash;
     // obiekt dystrybutor
     protected ObjectClassHandle distributorHandle;
     protected AttributeHandle distributorID;
@@ -32,6 +35,7 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     protected InteractionClassHandle cashServiceStart;
     protected InteractionClassHandle chooseDistributor;
     protected InteractionClassHandle wantToPay;
+    protected InteractionClassHandle endSimulation;
 
 
     public StatisticsFederate() {
@@ -49,6 +53,105 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     @Override
     protected void beforeSimulationLoop() throws RTIexception {
 
+    }
+
+    @Override
+    protected void afterSimulationLoop() throws RTIexception {
+        statistics.printDistributorQueueStatistics();
+        statistics.printDistributorServiceStatistics();
+        statistics.printCashQueueStatistics();
+        statistics.printCasWashQueueStatistics();
+    }
+
+    public Event createUpdateCarInstanceEvent(AttributeHandleValueMap theAttributes) {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                updateCarInstance(theAttributes);
+            }
+        };
+    }
+
+    public Event createEndSimulationEvent() {
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                finishSimulation();
+            }
+        };
+    }
+
+    public Event createAddCarToDistributorQueueEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(chooseDistributor, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                statistics.addStartService(Statistics.STAT_CLASS.DIST_QUEUE, carID, theTime.encodedLength());
+            }
+        };
+    }
+
+    public Event createDistributorStartServiceEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(distributorServiceStart, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                statistics.addFinishService(Statistics.STAT_CLASS.DIST_QUEUE, carID, theTime.encodedLength());
+                statistics.addStartService(Statistics.STAT_CLASS.DIST_SERVICE, carID, theTime.encodedLength());
+            }
+        };
+    }
+
+    public Event createDistributorFinishServiceEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(distributorServiceFinish, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                statistics.addFinishService(Statistics.STAT_CLASS.DIST_SERVICE, carID, theTime.encodedLength());
+            }
+        };
+    }
+
+    public Event createAddCarToCashQueueEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                if(statistics.carPayForWash(carID)) {
+                    statistics.addStartService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, theTime.encodedLength());
+                } else {
+                    statistics.addStartService(Statistics.STAT_CLASS.CASH_QUEUE, carID, theTime.encodedLength());
+                }
+            }
+        };
+    }
+
+    public Event createCashStartServiceEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
+        ParameterHandle carIDParameter = rtiamb.getParameterHandle(cashServiceStart, "CarID");
+        int carID = theParameters.getValueReference(carIDParameter).getInt();
+        return new Event(timeFactory.makeTime(0.0)) {
+            @Override
+            public void runEvent() throws RTIexception {
+                if(statistics.carPayForWash(carID)) {
+                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, theTime.encodedLength());
+                } else {
+                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_QUEUE, carID, theTime.encodedLength());
+                }
+            }
+        };
+    }
+
+    private void updateCarInstance(AttributeHandleValueMap theAttributes) {
+        int carID = theAttributes.getValueReference(this.carID).getInt();
+        boolean payForWash = theAttributes.getValueReference(this.payForWash).getInt() == 1;
+
+        statistics.updateCarFOMInstance(carID, payForWash);
+
+        log("Updated Car Instance: carID=" + carID + ", payForWash=" + payForWash);
     }
 
     @Override
@@ -78,18 +181,30 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         attributes.add(currentServiceCarID);
         rtiamb.subscribeObjectClassAttributes(carWashHandle, attributes);
 
+        attributes.clear();
+        carClassHandle = rtiamb.getObjectClassHandle("HLAobjectRoot.Car");
+        carID = rtiamb.getAttributeHandle(carClassHandle, "CarID");
+        wantWash = rtiamb.getAttributeHandle(carClassHandle, "WantWash");
+        payForWash = rtiamb.getAttributeHandle(carClassHandle, "PayForWash");
+        attributes.add(carID);
+        attributes.add(wantWash);
+        attributes.add(payForWash);
+        rtiamb.subscribeObjectClassAttributes(carClassHandle, attributes);
+
         // INTERAKCJE
         chooseDistributor = rtiamb.getInteractionClassHandle("HLAinteractionRoot.ChooseDistributor");
         distributorServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceStart");
         distributorServiceFinish = rtiamb.getInteractionClassHandle("HLAinteractionRoot.DistributorServiceFinish");
         cashServiceStart = rtiamb.getInteractionClassHandle("HLAinteractionRoot.CashServiceStart");
         wantToPay = rtiamb.getInteractionClassHandle("HLAinteractionRoot.WantToPay");
+        endSimulation = rtiamb.getInteractionClassHandle("HLAinteractionRoot.EndSimulation");
 
         rtiamb.subscribeInteractionClass(chooseDistributor);
         rtiamb.subscribeInteractionClass(wantToPay);
         rtiamb.subscribeInteractionClass(distributorServiceStart);
         rtiamb.subscribeInteractionClass(distributorServiceFinish);
         rtiamb.subscribeInteractionClass(cashServiceStart);
+        rtiamb.subscribeInteractionClass(endSimulation);
     }
 
     @Override

@@ -3,6 +3,7 @@ package gasStation.statistics;
 import gasStation.DefaultFederateAmbassador;
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.RTIexception;
 
 /**
  * Created by Michał on 2018-05-11.
@@ -31,47 +32,105 @@ public class StatisticsFederateAmbassador extends DefaultFederateAmbassador<Stat
             receiveDistributorServiceFinish(log, theParameters, userSuppliedTag, theTime);
         } else if (interactionClass.equals(federate.wantToPay)) {
             receiveWantToPay(log, theParameters, userSuppliedTag, theTime);
+        } else if (interactionClass.equals(federate.cashServiceStart)) {
+            receiveCashServiceStart(log, theParameters, userSuppliedTag, theTime);
+        } else if (interactionClass.equals(federate.endSimulation)) {
+            receiveEndSimulation(log, theParameters, userSuppliedTag, theTime);
         }
     }
 
     @Override
-    public void reflectAttributeValues (ObjectInstanceHandle theObject,
-                                        AttributeHandleValueMap theAttributes,
-                                        byte[] tag,
-                                        OrderType sentOrdering,
-                                        TransportationTypeHandle theTransport,
-                                        LogicalTime time,
-                                        OrderType receivedOrdering,
-                                        SupplementalReflectInfo reflectInfo)
-            throws FederateInternalError
-    {
-        StringBuilder builder = new StringBuilder( "Reflection for object:" );
-        builder.append( " handle=" + theObject );
-        reflectDistributor(builder, tag, time, theAttributes);
+    public void reflectAttributeValues(ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes, byte[] tag, OrderType sentOrdering, TransportationTypeHandle theTransport, LogicalTime time, OrderType receivedOrdering, SupplementalReflectInfo reflectInfo) throws FederateInternalError {
+        StringBuilder builder = new StringBuilder("Reflection for object:");
+        builder.append(" handle=" + theObject);
+        if (externalObjectInstanceMap.get(theObject).equals(federate.distributorHandle)) {
+            reflectDistributor(builder, tag, time, theAttributes);
+        } else if (externalObjectInstanceMap.get(theObject).equals(federate.carClassHandle)) {
+            reflectCar(builder, tag, time, theAttributes);
+        } else if (externalObjectInstanceMap.get(theObject).equals(federate.carWashHandle)) {
+
+        }
     }
 
     private void reflectDistributor(StringBuilder log, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
         log.append(" {DistributorObject in Statistics");
-        logReflectObject(log, tag, time, theAttributes);
+        log(log.toString());
+        //logReflectObject(log, tag, time, theAttributes);
+    }
+
+    private void reflectCarWash(StringBuilder log, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
+        log.append(" {CarWashObject in Statistics");
+        log(log.toString());
+        //logReflectObject(log, tag, time, theAttributes);
+    }
+
+    private void reflectCar(StringBuilder log, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {
+        externalEventList.add(federate.createUpdateCarInstanceEvent(theAttributes));
+        log.append(" {CarObject in Statistics");
+        log(log.toString());
+        //logReflectObject(log, tag, time, theAttributes);
     }
 
     private void receiveDistributorServiceStart(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {DistributorServiceStart}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        try {
+            externalEventList.add(federate.createDistributorStartServiceEvent(theParameters, theTime));
+            log.append(" {DistributorServiceStart}");
+            log(log.toString());
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     private void receiveDistributorServiceFinish(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {DistributorServiceFinish}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        try {
+            externalEventList.add(federate.createDistributorFinishServiceEvent(theParameters, theTime));
+            log.append(" {DistributorServiceFinish}");
+            log(log.toString());
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     private void receiveWantToPay(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {WantToPay}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        try {
+            externalEventList.add(federate.createAddCarToCashQueueEvent(theParameters, theTime));
+            log.append(" {WantToPay}");
+            log(log.toString());
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     private void receiveChooseDistributor(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
-        log.append(" {ChooseDistributor}");
-        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        try {
+            externalEventList.add(federate.createAddCarToDistributorQueueEvent(theParameters, theTime));
+            log.append(" {ChooseDistributor}");
+            log(log.toString());
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+    }
+
+    private void receiveCashServiceStart(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
+        try {
+            externalEventList.add(federate.createCashStartServiceEvent(theParameters, theTime));
+            log.append(" {CashServiceStart}");
+            log(log.toString());
+        } catch (RTIexception rtIexception) {
+            rtIexception.printStackTrace();
+        }
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+    }
+
+    private void receiveEndSimulation(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
+        externalEventList.add(federate.createEndSimulationEvent());
+        log.append(" {EndSimulation}");
+        log(log.toString());
+
+        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 }
