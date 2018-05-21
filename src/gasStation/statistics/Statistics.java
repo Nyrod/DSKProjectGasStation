@@ -93,7 +93,7 @@ public class Statistics {
 
     private double getMinValue(Map<Integer, ServiceTime> statistics) {
         Set<Integer> keySet = statistics.keySet();
-        double minValue = Integer.MAX_VALUE;
+        double minValue = Double.MAX_VALUE;
         for (Integer ID : keySet) {
             if (statistics.get(ID).getServiceTime() < minValue) {
                 minValue = statistics.get(ID).getServiceTime();
