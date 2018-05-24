@@ -21,19 +21,22 @@ public class Cash {
         finishCurrentServiceTime = 0.0;
     }
 
-    public void addCarToQueue(int carID) {
+    public int addCarToQueue(int carID) {
         CarFOM carToAdd = getCarFOMByID(carID);
         if (carToAdd != null) {
-            if (carToAdd.payForWash) {
-                int i = 0;
-                while (i < queue.size() && queue.get(i).payForWash) {
-                    i++;
-                }
-                queue.add(i, carToAdd);
-            } else {
+//            if (carToAdd.payForWash) {
+//                int i = 0;
+//                while (i < queue.size() && queue.get(i).payForWash) {
+//                    i++;
+//                }
+//                queue.add(i, carToAdd);
+//                return i;
+//            } else {
                 queue.add(carToAdd);
-            }
+                return queue.size() - 1;
+//            }
         }
+        return -1;
     }
 
     public int getCarIDFromQueue() {
@@ -87,7 +90,7 @@ public class Cash {
     @Override
     public String toString() {
         return "Cash{" +
-                "cashQueueSize=" + queue.size() +
+                "distributorQueueSize=" + queue.size() +
                 '}';
     }
 

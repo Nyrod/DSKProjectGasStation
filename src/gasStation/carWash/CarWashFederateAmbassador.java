@@ -30,9 +30,9 @@ public class CarWashFederateAmbassador extends DefaultFederateAmbassador<CarWash
     private void receiveEndSimulation(StringBuilder log, ParameterHandleValueMap theParameters, byte[] userSuppliedTag, LogicalTime theTime) {
         externalEventList.add(federate.createEndSimulationEvent());
         log.append(" {EndSimulation}");
-        log(log.toString());
+        //log(log.toString());
 
-        //logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
+        logReceiveInteraction(log, theParameters, userSuppliedTag, theTime);
     }
 
     @Override

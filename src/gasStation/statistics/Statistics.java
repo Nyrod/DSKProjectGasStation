@@ -67,13 +67,17 @@ public class Statistics {
 
     public void addFinishService(STAT_CLASS statClass, int ID, double finishServiceTime) {
         if (statClass.equals(STAT_CLASS.DIST_SERVICE)) {
-            addFinishService(distributorServiceTime, ID, finishServiceTime);
+            ServiceTime s = distributorServiceTime.get(ID);
+            s.finishServiceTime = finishServiceTime;
         } else if (statClass.equals(STAT_CLASS.DIST_QUEUE)) {
-            addFinishService(distributorQueueWaitingTime, ID, finishServiceTime);
+            ServiceTime s = distributorQueueWaitingTime.get(ID);
+            s.finishServiceTime = finishServiceTime;
         } else if (statClass.equals(STAT_CLASS.CASH_QUEUE)) {
-            addFinishService(cashQueueWaitingTime, ID, finishServiceTime);
+            ServiceTime s = cashQueueWaitingTime.get(ID);
+            s.finishServiceTime = finishServiceTime;
         } else if (statClass.equals(STAT_CLASS.CASH_WASH_QUEUE)) {
-            addFinishService(cashWashQueueWaitingTime, ID, finishServiceTime);
+            ServiceTime s = cashWashQueueWaitingTime.get(ID);
+            s.finishServiceTime = finishServiceTime;
         }
     }
 

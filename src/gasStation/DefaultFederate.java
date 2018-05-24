@@ -181,16 +181,7 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
         boolean isAdvancing = false;
         double timeToAdvance = fedamb.federateTime + fedamb.federateLookahead;
         HLAfloat64Time nextEventTime;
-
         while (isRunning) {
-            if (!fedamb.externalEventList.isEmpty()) {
-                Iterator<Event> iterator = fedamb.externalEventList.iterator();
-                while(iterator.hasNext()) {
-                    iterator.next().runEvent();
-                    iterator.remove();
-                }
-            }
-
             if (!isAdvancing) {
                 if (!internalEventList.isEmpty()) {
                     internalEventList.sort(Comparator.comparing(Event::getTime));
@@ -212,9 +203,17 @@ public abstract class DefaultFederate<FederateAmbassador extends DefaultFederate
                 isAdvancing = true;
             }
 
+            if (!fedamb.externalEventList.isEmpty()) {
+                Iterator<Event> iterator = fedamb.externalEventList.iterator();
+                while(iterator.hasNext()) {
+                    iterator.next().runEvent();
+                    iterator.remove();
+                }
+            }
+
             if (fedamb.grantedTime == timeToAdvance) {
                 fedamb.federateTime = timeToAdvance;
-                log("Time advanced to: " + timeToAdvance);
+                //log("Time advanced to: " + timeToAdvance);
 
                 if (!internalEventList.isEmpty()) {
                     Iterator<Event> iterator = internalEventList.iterator();

@@ -94,15 +94,15 @@ public class DefaultFederateAmbassador<Federate extends DefaultFederate> extends
         log.append(", tag=" + new String(userSuppliedTag));
         log.append(", time=" + ((HLAfloat64Time) theTime).getValue());
         log.append("\n");
-        for (ParameterHandle parameter : theParameters.keySet()) {
-            log.append("\tparamHandle=");
-            log.append(parameter);
-            log.append(", paramValue=");
-            log.append(theParameters.get(parameter).length);
-            log.append(" bytes");
-            log.append("\n");
-        }
-        //log(log.toString());
+//        for (ParameterHandle parameter : theParameters.keySet()) {
+//            log.append("\tparamHandle=");
+//            log.append(parameter);
+//            log.append(", paramValue=");
+//            log.append(theParameters.get(parameter).length);
+//            log.append(" bytes");
+//            log.append("\n");
+//        }
+        log(log.toString());
     }
 
     protected void logReflectObject(StringBuilder builder, byte[] tag, LogicalTime time, AttributeHandleValueMap theAttributes) {

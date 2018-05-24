@@ -46,7 +46,6 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
     @Override
     protected StatisticsFederateAmbassador createFederateAmbassador() {
         StatisticsFederateAmbassador statisticsFederateAmbassador = new StatisticsFederateAmbassador(this);
-        statisticsFederateAmbassador.federateLookahead = 5;
         return statisticsFederateAmbassador;
     }
 
@@ -87,9 +86,10 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                statistics.addStartService(Statistics.STAT_CLASS.DIST_QUEUE, carID, theTime.encodedLength());
+                statistics.addStartService(Statistics.STAT_CLASS.DIST_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
             }
         };
+
     }
 
     public Event createDistributorStartServiceEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
@@ -98,8 +98,8 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                statistics.addFinishService(Statistics.STAT_CLASS.DIST_QUEUE, carID, theTime.encodedLength());
-                statistics.addStartService(Statistics.STAT_CLASS.DIST_SERVICE, carID, theTime.encodedLength());
+                statistics.addFinishService(Statistics.STAT_CLASS.DIST_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
+                statistics.addStartService(Statistics.STAT_CLASS.DIST_SERVICE, carID, ((HLAfloat64Time) theTime).getValue());
             }
         };
     }
@@ -110,24 +110,33 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                statistics.addFinishService(Statistics.STAT_CLASS.DIST_SERVICE, carID, theTime.encodedLength());
+                statistics.addFinishService(Statistics.STAT_CLASS.DIST_SERVICE, carID, ((HLAfloat64Time) theTime).getValue());
             }
         };
     }
 
     public Event createAddCarToCashQueueEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
-        ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
-        int carID = theParameters.getValueReference(carIDParameter).getInt();
-        return new Event(timeFactory.makeTime(0.0)) {
-            @Override
-            public void runEvent() throws RTIexception {
-                if(statistics.carPayForWash(carID)) {
-                    statistics.addStartService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, theTime.encodedLength());
-                } else {
-                    statistics.addStartService(Statistics.STAT_CLASS.CASH_QUEUE, carID, theTime.encodedLength());
+        try {
+            ParameterHandle carIDParameter = rtiamb.getParameterHandle(wantToPay, "CarID");
+            int carID = theParameters.getValueReference(carIDParameter).getInt();
+            return new Event(timeFactory.makeTime(0.0)) {
+                @Override
+                public void runEvent() throws RTIexception {
+                    if (statistics.carPayForWash(carID)) {
+                        statistics.addStartService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
+                    } else {
+                        statistics.addStartService(Statistics.STAT_CLASS.CASH_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
+                    }
                 }
-            }
-        };
+            };
+        } catch (NullPointerException e) {
+            return new Event(timeFactory.makeTime(0.0)) {
+                @Override
+                public void runEvent() throws RTIexception {
+
+                }
+            };
+        }
     }
 
     public Event createCashStartServiceEvent(ParameterHandleValueMap theParameters, LogicalTime theTime) throws RTIexception {
@@ -136,10 +145,10 @@ public class StatisticsFederate extends DefaultFederate<StatisticsFederateAmbass
         return new Event(timeFactory.makeTime(0.0)) {
             @Override
             public void runEvent() throws RTIexception {
-                if(statistics.carPayForWash(carID)) {
-                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, theTime.encodedLength());
+                if (statistics.carPayForWash(carID)) {
+                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_WASH_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
                 } else {
-                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_QUEUE, carID, theTime.encodedLength());
+                    statistics.addFinishService(Statistics.STAT_CLASS.CASH_QUEUE, carID, ((HLAfloat64Time) theTime).getValue());
                 }
             }
         };

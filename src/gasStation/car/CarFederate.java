@@ -167,7 +167,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         internalEventList.add(new Event(timeFactory.makeTime(time)) {
             @Override
             public void runEvent() throws RTIexception {
-                sendInteractionEndSimulation(time);
+                sendInteractionEndSimulation(time + 10);
             }
         });
     }
@@ -289,7 +289,7 @@ public class CarFederate extends DefaultFederate<CarFederateAmbassador> {
         ParameterHandleValueMap parameters = rtiamb.getParameterHandleValueMapFactory().create(0);
 
         HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
-        rtiamb.sendInteraction(wantToPay, parameters, generateTag(), theTime);
+        rtiamb.sendInteraction(endSimulation, parameters, generateTag(), theTime);
 
         log("Interaction Send: handle=" + endSimulation + " {EndSimulation}, time=" + theTime.toString());
     }

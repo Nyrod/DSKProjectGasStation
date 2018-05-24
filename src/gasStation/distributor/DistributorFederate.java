@@ -77,7 +77,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
                 if(distributor.getNextServiceTime() == 0 || distributor.getNextServiceTime() < fedamb.federateTime + fedamb.federateLookahead) {
                     distributor.setNextServiceTime(fedamb.federateTime + fedamb.federateLookahead);
                 }
-                createStartServiceEvent(distributor.getDistributorID(), distributor.getNextServiceTime());
+                createStartServiceEvent(carID, distributor.getDistributorID(), distributor.getNextServiceTime());
 //                if(distributor.getQueueSize() - 1 == 0) {
 //                    createStartServiceEvent(distributor.getDistributorID(), fedamb.federateTime + fedamb.federateLookahead);
 //                }
@@ -94,20 +94,20 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         });
     }
 
-    public void createStartServiceEvent(int distributorID, double time) {
+    public void createStartServiceEvent(int carID, int distributorID, double time) {
         Random rand = new Random();
         Distributor distributor = getDistributorByID(distributorID);
         double finishServiceTime = time + rand.nextInt(20) + 10;
         internalEventList.add(new Event(timeFactory.makeTime(time)) {
             @Override
             public void runEvent() throws RTIexception {
-                int carID = distributor.getCar();
+                distributor.getCar();
                 sendInteractionDistributorServiceStart(distributor.getDistributorID(), carID, time);
                 updateDistributorAttributes(distributor, time);
             }
         });
         distributor.setNextServiceTime(finishServiceTime);
-        createFinishServiceEvent(distributor, distributor.getNextServiceCar(), finishServiceTime);
+        createFinishServiceEvent(distributor, carID, finishServiceTime);
     }
 
     public void createFinishServiceEvent(Distributor distributor, int carID, double time) {
@@ -131,7 +131,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         HLAfloat64Time theTime = timeFactory.makeTime(time+ fedamb.federateLookahead);
         rtiamb.sendInteraction(distributorServiceStart, parameters, generateTag(), theTime);
 
-        log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, time=" + theTime.toString());
+        log("Interaction Send: handle=" + distributorServiceStart + " {DistributorServiceStart}, carID=" + carID + ", distributorID=" + distributorID + ", time=" + theTime.toString());
     }
 
     private void sendInteractionDistributorServiceFinish(int distributorID, int carID, double time) throws RTIexception {
@@ -146,7 +146,7 @@ public class DistributorFederate extends DefaultFederate<DistributorFederateAmba
         HLAfloat64Time theTime = timeFactory.makeTime(time + fedamb.federateLookahead);
         rtiamb.sendInteraction(distributorServiceFinish, parameters, generateTag(), theTime);
 
-        log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceFinish}, time=" + theTime.toString());
+        log("Interaction Send: handle=" + distributorServiceFinish + " {DistributorServiceFinish}, carID=" + carID + ", distributorID=" + distributorID + ", time=" + theTime.toString());
     }
 
     private void updateDistributorAttributes(Distributor distributor, double time) throws RTIexception {
